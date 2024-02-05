@@ -1,0 +1,71 @@
+{
+  "name": "enlighten-cli",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/input": "^2.1.2",
+    "@chakra-ui/modal": "^2.3.1",
+    "@chakra-ui/next-js": "^2.2.0",
+    "@chakra-ui/radio": "^2.1.2",
+    "@chakra-ui/react": "^2.8.2",
+    "@chakra-ui/styled-system": "^2.9.2",
+    "@chakra-ui/tabs": "^3.0.0",
+    "@chakra-ui/theme": "^3.3.1",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@yushijinhun/three-minifier-webpack": "0.4.0",
+    "axios": "^1.6.7",
+    "firebase": "^10.7.2",
+    "framer-motion": "^11.0.3",
+    "next": "14.0.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "start": "next start",
+    "build": "next build",
+    "test": "next test",
+    "eject": "next eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@next/bundle-analyzer": "14.0.4",
+    "@types/next-pwa": "^5.6.9",
+    "@types/node": "20.10.4",
+    "@types/object-hash": "^3.0.6",
+    "@types/react": "18.2.45",
+    "@types/three": "0.152.1",
+    "autoprefixer": "10.4.16",
+    "eslint": "8.55.0",
+    "eslint-config-next": "14.0.4",
+    "eslint-config-prettier": "9.1.0",
+    "prettier": "3.1.1",
+    "tsconfig-paths-webpack-plugin": "^4.1.0",
+    "typescript": "5.3.3"
+  }
+}

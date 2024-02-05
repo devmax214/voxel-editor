@@ -14,43 +14,60 @@ import {
   Link,
   Avatar,
   FormControl,
-  FormHelperText,
-  InputRightElement
+  Divider,
+  AbsoluteCenter,
+  InputRightElement,
+  Text,
+  Image
 } from "@chakra-ui/react";
 import { FaUserAlt, FaLock } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
 import { getUserInfo } from 'utils/api';
+import { useToast } from '@chakra-ui/react'
 
 const CFaUserAlt = chakra(FaUserAlt);
 const CFaLock = chakra(FaLock);
 
 const Login = () => {
+  const router = useRouter();
 
   useEffect(()=>{
     if (typeof window !== 'undefined'){
       const userInfo = localStorage.getItem('userAuthInfo')
       if(userInfo) router.push('/')
     }
-  },[])
-  const router = useRouter();
+  },[router]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const handleShowClick = () => setShowPassword(!showPassword);
-
+  const toast = useToast()
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
 
-  const loginWithGoogle = () => {
-    signInWithPopup(auth, provider)
-      .then((result) => {
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          // @ts-ignore
-          const token = credential.accessToken;
-          // The signed-in user info.
-      }).catch((error) => {
-          console.error('Error signing in with Google:', error);
+  const loginWithGoogle = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      // @ts-ignore
+      const token = credential.accessToken;
+      localStorage.setItem('userAuthInfo', JSON.stringify(result.user));
+      const userInfo = await getUserInfo(result.user.uid);
+      localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      console.log('=======credential of login with google=======', result.user);
+      toast({
+        title: 'Success',
+        description: "You've logged in successfully.",
+        status: 'success',
+        position: 'top',
+        duration: 3000,
+        isClosable: true,
       });
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing in with Google:', error);
+    }
   };
 
   // const signup = () => {
@@ -95,11 +112,27 @@ const Login = () => {
 
     if (!email || !email.includes('@')) {
       console.error('Please enter a valid email.');
+      toast({
+        title: 'Error',
+        description: "Please enter a valid email.",
+        status: 'error',
+        position: 'top',
+        duration: 3000,
+        isClosable: true,
+      })
       return;
     }
 
     if (!password || password.length < 6) {
       console.error('Please enter a password of at least 6 characters.');
+      toast({
+        title: 'Error',
+        description: "Please enter a password of at least 6 characters.",
+        status: 'error',
+        position: 'top',
+        duration: 3000,
+        isClosable: true,
+      })
       return;
     }
 
@@ -110,9 +143,25 @@ const Login = () => {
       
       const userInfo = await getUserInfo(userCredential.user.uid);
       localStorage.setItem('userInfo', JSON.stringify(userInfo))
+      toast({
+        title: 'Success',
+        description: "You've logged in successfully.",
+        status: 'success',
+        position: 'top',
+        duration: 3000,
+        isClosable: true,
+      })
       router.push('/');
     } catch (error) {
       console.error('Error signing in with email and password:', error);
+      toast({
+        title: 'Error',
+        description: "Wrong email or password!",
+        status: 'error',
+        position: 'top',
+        duration: 3000,
+        isClosable: true,
+      })
     }
   };
 
@@ -134,88 +183,99 @@ const Login = () => {
       flexDirection="column"
       width="100wh"
       height="100vh"
-      backgroundColor="gray.200"
+      // backgroundColor="#000000"
       justifyContent="center"
       alignItems="center"
     >
-      <Stack
-        flexDir="column"
-        mb="2"
-        justifyContent="center"
-        alignItems="center"
-      >
-        <Avatar bg="teal.500" />
-        <Heading color="teal.400">Welcome</Heading>
-        <Box minW={{ base: "90%", md: "468px" }}>
-          <form>
-            <Stack
-              spacing={4}
-              p="1rem"
-              backgroundColor="whiteAlpha.900"
-              boxShadow="md"
-            >
-              <FormControl>
-                <InputGroup>
-                  <InputLeftElement
-                    pointerEvents="none"
-                    children={<CFaUserAlt color="gray.300" />}
-                  />
-                  <Input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="Email address" />
-                </InputGroup>
-              </FormControl>
-              <FormControl>
-                <InputGroup>
-                  <InputLeftElement
-                    pointerEvents="none"
-                    color="gray.300"
-                    children={<CFaLock color="gray.300" />}
-                  />
-                  <Input
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}  
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Password"
-                  />
-                  <InputRightElement width="4.5rem">
-                    <Button h="1.75rem" size="sm" onClick={handleShowClick}>
-                      {showPassword ? "Hide" : "Show"}
-                    </Button>
-                  </InputRightElement>
-                </InputGroup>
-                <FormHelperText textAlign="right">
-                  <Link>forgot password?</Link>
-                </FormHelperText>
-              </FormControl>
-              <Button
-                borderRadius={0}
-                // type="submit"
-                variant="solid"
-                colorScheme="teal"
-                width="full"
-                onClick={login}
-              >
-                Login
-              </Button>
-              {/* <Button
-                borderRadius={0}
-                // type="submit"
-                variant="solid"
-                colorScheme="teal"
-                width="full"
-                onClick={loginWithGoogle}
-              >
-                Login with Google
-              </Button> */}
-            </Stack>
-          </form>
-        </Box>
-      </Stack>
-      <Box>
-        New to us?{" "}
-        <Link color="teal.500" href="#">
-          Sign Up
-        </Link>
-      </Box>
+      <form>
+        <Stack
+          spacing={4}
+          p="3rem"
+          // backgroundColor="#f5f5f5"
+          backgroundColor="#ffbd59"
+          boxShadow="md"
+          borderRadius="20px"
+        >
+          {/* <Avatar bg="blue.500" alignSelf="center" /> */}
+          <Image alignSelf="center" src='/short-height-logo.jpg' height="40px" width="80px" />
+          
+          <Heading fontSize={26} textAlign="center" color="">Welcome to Enlighten 3D</Heading>
+          <Text fontSize={14} textAlign="center" color="">Enter your email and password to get started.</Text>
+          <FormControl _focus={{borderColor: "yellow.800"}}>
+            <InputGroup borderColor="yellow.600" _hover={{borderColor: "yellow.400"}}>
+              <InputLeftElement
+                pointerEvents="none"
+                children={<CFaUserAlt color="yellow.800" />}
+              />
+              <Input value={email} 
+                onChange={e => setEmail(e.target.value)}
+                type="email"
+                placeholder="Email" 
+                _hover={{borderColor: "yellow.800"}}/>
+            </InputGroup>
+          </FormControl>
+          <FormControl _focus={{borderColor: "yellow.800"}}>
+            <InputGroup borderColor="yellow.600"  colorScheme='custom'>
+              <InputLeftElement
+                pointerEvents="none"
+                color="yellow.800"
+                children={<CFaLock color="yellow.800" />}
+              />
+              <Input
+                value={password}
+                onChange={e => setPassword(e.target.value)}  
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                _hover={{borderColor: "yellow.800"}}
+              />
+              <InputRightElement width="4.5rem">
+                <Button colorScheme='gray.600' h="1.75rem" size="sm" onClick={handleShowClick} bg="gray.700" color="white">
+                  {showPassword ? "Hide" : "Show"}
+                </Button>
+              </InputRightElement>
+            </InputGroup>
+            {/* <FormHelperText textAlign="right">
+              <Link>forgot password?</Link>
+            </FormHelperText> */}
+          </FormControl>
+          <Button
+            // borderRadius={0}
+            // type="submit"
+            variant="solid"
+            colorScheme="green"
+            bg="gray.700" color="white"
+            width="full"
+            onClick={login}
+            // _hover={{ bg: "gray.600" }}
+          >
+            Continue
+          </Button>
+          {/* <Text fontSize={14} color="">
+            Don't have an account? &nbsp;
+            <Link color="blue" href="#">
+              Sign up
+            </Link>
+          </Text> */}
+          <Box position='relative' py='2'>
+            <Divider borderColor="yellow.800" />
+            <AbsoluteCenter bg='#ffbd59' px='4' fontSize={14}>
+              OR
+            </AbsoluteCenter>
+          </Box>
+          <Button
+            // display="flex"
+            // alignItems="center"
+            // justifyContent="flex-start"
+            leftIcon={<FcGoogle />} 
+            colorScheme='green'
+            bg="gray.700" color="white" 
+            variant='solid'
+            onClick={loginWithGoogle}
+          >
+            Continue with Google
+          </Button>
+        </Stack>
+      </form>
     </Flex>
   );
 }

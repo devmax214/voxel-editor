@@ -2,7 +2,7 @@
 
 import React, { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, RoundedBox, Plane, Environment } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, RoundedBox, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import usePLYLoader from "@/hooks/usePLYLoader";
 import { Voxel } from "utils/voxel";
@@ -18,9 +18,6 @@ type VoxelsProps = {
 
 const Voxels: React.FC<VoxelsProps> = ({ voxels }) => (
   <>
-    <Plane args={[10, 10]} receiveShadow={true}>
-      <meshLambertMaterial color={0xffffff} />
-    </Plane>
     {voxels.map((voxel, index) => (
       <RoundedBox key={index} args={voxel.size} position={voxel.position} radius={voxelSize / 20}>
         <meshStandardMaterial color={0x00ff00} wireframe={false} />

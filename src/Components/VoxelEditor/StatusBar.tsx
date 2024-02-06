@@ -54,10 +54,16 @@ const ProgressBar = () => {
   )
 }
 
-const ImExportBar = () => {
+const ImExportBar = ({
+
+} : {
+
+}) => {
   return (
     <div className="flex gap-x-2">
-      <Button className="uppercase">import</Button>
+      <div className="relative">
+        <Button className="uppercase">import</Button>
+      </div>
       <Button className="uppercase">export</Button>
     </div>
   );

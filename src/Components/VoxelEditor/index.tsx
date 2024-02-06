@@ -1,17 +1,14 @@
 'use client'
 
-import React, { Suspense, useRef, useState, useEffect } from "react";
-import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import React, { Suspense, useRef, useState, useEffect, useLayoutEffect } from "react";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader";
 import * as THREE from "three";
 
-import Grid from "./Grid";
+import { voxelizeMesh, Voxel } from "utils/voxel";
+const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
-type Voxel = {
-  position: [number, number, number],
-  size: [number, number, number];
-};
 type VoxelsProps = {
   voxels: Voxel[];
 }
@@ -28,7 +25,7 @@ const Voxels: React.FC<VoxelsProps> = ({ voxels }) => (
 );
 
 const usePLYLoader = (file: File | null) => {
-  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+  const [vertices, setVertices] = useState<Voxel[] | null>(null);
 
   useEffect(() => {
     if (file) {
@@ -37,21 +34,40 @@ const usePLYLoader = (file: File | null) => {
         if (event.target && event.target.result) {
           const loader = new PLYLoader();
           const geometry = loader.parse(event.target.result as ArrayBuffer);
-          setGeometry(geometry);
+          // geometry.computeVertexNormals();
+          const material = new THREE.MeshPhongMaterial({color: 0x00ff00, wireframe: false});
+          material.side = THREE.DoubleSide;
+
+          material.transparent = true;
+          material.opacity = 0.5;
+          const mesh = new THREE.Mesh(geometry, material);
+          
+          const vertices = voxelizeMesh(mesh, voxelSize);
+          setVertices(vertices);
         }
       };
       reader.readAsArrayBuffer(file);
     }
   }, [file]);
 
-  return geometry;
+  return vertices;
+}
+
+const SceneBackground: React.FC = () => {
+  const { scene } = useThree();
+
+  useEffect(() => {
+    scene.background = new THREE.Color('grey');
+  }, [scene]);
+
+  return null;
 }
 
 const Scene: React.FC = () => {
   const controlsRef = useRef(null);
   const [plyFile, setPlyFile] = useState<File | null>(null);
 
-  const plyGeometry = usePLYLoader(plyFile);
+  const voxelData = usePLYLoader(plyFile);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -60,24 +76,24 @@ const Scene: React.FC = () => {
     }
   };
 
-  const voxelData: Voxel[] = [];
-
   return (
-    <>
-      <div style={{ width: "100vw", height: "100vh" }}>
+    <div style={{ width: "100vw", height: "100vh" }}>
+      <div className="absolute z-10">
+        <input type='file' onChange={handleFileUpload} id="plyUpload" accept=".ply" />
+      </div>
+      <div className="w-full h-full">
         <Canvas>
-          <PerspectiveCamera makeDefault position={[0, 0, 5]} />
-          <ambientLight intensity={0.4} />
-          <directionalLight position={[1, 1, 1]} />
+          <SceneBackground />
+          <PerspectiveCamera makeDefault position={[0, 1, 3]} />
+          <ambientLight intensity={0.1} />
+          <directionalLight position={[1, 1, 1]} intensity={1} />
           <Suspense fallback={null}>
-            <Voxels voxels={voxelData} />
-            {plyGeometry && <primitive object={new THREE.Mesh(plyGeometry)} />}
+            {voxelData && <Voxels voxels={voxelData} />}
           </Suspense>
           <OrbitControls ref={controlsRef} />
         </Canvas>
       </div>
-      <input type='file' onChange={handleFileUpload} id="plyUpload" accept=".ply" />
-    </>
+    </div>
   );
 }
 

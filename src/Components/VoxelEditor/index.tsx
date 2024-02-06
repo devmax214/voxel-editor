@@ -35,13 +35,13 @@ const usePLYLoader = (file: File | null) => {
           const loader = new PLYLoader();
           const geometry = loader.parse(event.target.result as ArrayBuffer);
           // geometry.computeVertexNormals();
-          const material = new THREE.MeshPhongMaterial({color: 0x00ff00, wireframe: false});
+          const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: false });
           material.side = THREE.DoubleSide;
 
           material.transparent = true;
           material.opacity = 0.5;
           const mesh = new THREE.Mesh(geometry, material);
-          
+
           const vertices = voxelizeMesh(mesh, voxelSize);
           setVertices(vertices);
         }
@@ -82,7 +82,9 @@ const Scene: React.FC = () => {
         <input type='file' onChange={handleFileUpload} id="plyUpload" accept=".ply" />
       </div>
       <div className="w-full h-full">
-        <Canvas>
+        <Canvas
+          dpr={[1, 1]}
+        >
           <SceneBackground />
           <PerspectiveCamera makeDefault position={[0, 1, 3]} />
           <ambientLight intensity={0.1} />

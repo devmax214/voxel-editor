@@ -44,7 +44,6 @@ const Home = () => {
   return (
     <>
       {/* <Login /> */}
-      {userInfo && <MainHeader />}
       <Container w={'full'} maxW='8xl' my={4}>
         <Grid templateColumns='repeat(2, 1fr)' gap={4} w={'100%'} height="500px">
           <GridItem colSpan={1} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8} p={2}>

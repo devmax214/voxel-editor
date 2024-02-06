@@ -1,8 +1,8 @@
+import Image from "next/image";
 import { ReactNode, useState } from "react";
-import { Link, Box, Flex, Text, Button, Stack } from "@chakra-ui/react";
+import { Link, Box, Flex, Text, Stack, Input, Button } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
-
 
 const MainHeader = (props: GridProps) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -10,12 +10,20 @@ const MainHeader = (props: GridProps) => {
 
     return (
         <NavBarContainer {...props}>
-            <Text fontSize='lg'>Logo</Text>
-            <MenuLinks isOpen={isOpen} />
+            <div className="flex items-center gap-x-4">
+                <Image src={"/Enlighten3D_logo.jpg"} alt="logo" width={70} height={50} />
+                <MenuLinks isOpen={isOpen} />
+            </div>
+            <div className="flex items-center gap-x-10">
+                <FileNamgeChanger />
+                <FileActionBar />
+            </div>
+            <div className="flex items-center gap-x-4">
+                <ProfileCard />
+            </div>
         </NavBarContainer>
     );
 };
-
 
 const MenuItem = ({ children, isLast, to = "/", ...rest }: { children: ReactNode, isLast?: boolean, to: string }) => {
     return (
@@ -42,7 +50,6 @@ const MenuLinks = ({ isOpen }: { isOpen: boolean }) => {
             >
                 <MenuItem to="/">Home</MenuItem>
                 <MenuItem to="/editor"> Editor </MenuItem>
-                <ProfileCard />
             </Stack>
         </Box>
     );
@@ -56,14 +63,37 @@ const NavBarContainer = ({ children, ...props }: { children: ReactNode }) => {
             justify="space-between"
             wrap="wrap"
             w="100%"
-            p={8}
+            p={2}
             bg={["primary.500", "primary.500", "transparent", "transparent"]}
             color={["white", "white", "primary.700", "primary.700"]}
+            height={"80px"}
             {...props}
         >
             {children}
         </Flex>
     );
 };
+
+const FileNamgeChanger = () => {
+    return (
+        <div className="flex items-center">
+            {/* <Input className="w-40" /> */}
+            <div className="w-40 text-center">
+                <p className="text-black">File Name</p>
+                <p className="text-black text-sm">Last Save</p>
+            </div>
+            <Button className="uppercase">rename</Button>
+        </div>
+    );
+}
+
+const FileActionBar = () => {
+    return (
+        <div className="flex items-center gap-x-4">
+            <Button className="uppercase">save</Button>
+            <Button className="uppercase">feedback</Button>
+        </div>
+    );
+}
 
 export default MainHeader;

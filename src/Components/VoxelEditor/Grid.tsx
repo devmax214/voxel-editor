@@ -21,13 +21,15 @@ const Grid: React.FC<GridProps> = ({
   const { scene } = useThree();
 
   useEffect(() => {
-    if (gridRef.current) {
-      scene.add(gridRef.current);
+    const ref = gridRef.current;
+
+    if (ref) {
+      scene.add(ref);
     }
 
     return () => {
-      if (gridRef.current) {
-        scene.remove(gridRef.current);
+      if (ref) {
+        scene.remove(ref);
       }
     };
   }, [scene]);

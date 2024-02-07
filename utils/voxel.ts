@@ -28,7 +28,7 @@ export function voxelizeMesh(mesh: THREE.Mesh, gridSize: number) {
 
 function isInsideMesh(pos: THREE.Vector3, mesh: THREE.Mesh) {
   const rayCaster = new THREE.Raycaster();
-  rayCaster.set(pos, new THREE.Vector3(0, -1, 0));
+  rayCaster.set(pos, new THREE.Vector3(1, 0, 0));
   const rayCasterIntersects = rayCaster.intersectObject(mesh, false);
   return rayCasterIntersects.length % 2 === 1;
 }

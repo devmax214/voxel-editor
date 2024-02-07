@@ -1,12 +1,18 @@
-import React from "react";
+'use client'
+
+import React, { useEffect, useState } from "react";
 import { useRadioGroup } from "@chakra-ui/radio";
 import { Button, HStack, Input, Progress } from "@chakra-ui/react";
 import RadioCard from "../Elements/Radio/RadioCard";
+import usePLYLoader from "@/hooks/usePLYLoader";
+import { useBasicStore, useThreeStore } from "@/store";
+
+const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
 const StatusBar = () => {
   return (
     <div className="absolute z-10 w-full bottom-10">
-      <div className="z-10 mx-auto border border-black rounded-lg w-fit p-2">
+      <div className="z-10 mx-auto border border-black rounded-lg w-fit p-2 bg-white">
         <div className="flex gap-x-8">
           <ViewModeSwicher />
           <PromptEditor />
@@ -20,11 +26,12 @@ const StatusBar = () => {
 
 const ViewModeSwicher = () => {
   const options = ['voxel', 'mesh'];
+  const { viewMode, setViewMode } = useBasicStore();
 
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'viewMode',
-    defaultValue: 'voxel',
-    onChange: console.log,
+    defaultValue: viewMode,
+    onChange: setViewMode,
   });
 
   const group = getRootProps();
@@ -54,17 +61,39 @@ const ProgressBar = () => {
   )
 }
 
-const ImExportBar = ({
+const ImExportBar = () => {
+  const [plyFile, setPlyFile] = useState<File | null>(null);
+  const { setVoxels, setMesh } = useThreeStore();
 
-} : {
+  const [voxelData, mesh] = usePLYLoader(plyFile, voxelSize);
 
-}) => {
+  useEffect(() => {
+    setVoxels(voxelData);
+    setMesh(mesh);
+  }, [voxelData, setVoxels, mesh, setMesh]);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files?.length) {
+      setPlyFile(files[0]);
+    }
+  };
+
   return (
     <div className="flex gap-x-2">
       <div className="relative">
-        <Button className="uppercase">import</Button>
+        <input
+          className="absolute w-full h-full opacity-0 z-10 cursor-pointer"
+          type="file"
+          accept=".ply"
+          onChange={handleFileUpload}
+          />
+        <Button as={'div'} className="absolute uppercase z-0">import</Button>
       </div>
-      <Button className="uppercase">export</Button>
+      <div className="relative">
+        {/* <input className="absolute w-full h-full opacity-0 z-10 cursor-pointer" type="file" accept=".ply" /> */}
+        <Button as={'div'} className="absolute uppercase z-0">export</Button>
+      </div>
     </div>
   );
 }

@@ -27,6 +27,7 @@ const RadioCard = (props: RadioProps) => {
         }}
         px={3}
         py={1.5}
+        className="capitalize"
       >
         {props.children}
       </Box>

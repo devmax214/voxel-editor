@@ -11,7 +11,7 @@ const MainHeader = (props: GridProps) => {
     return (
         <NavBarContainer {...props}>
             <div className="flex items-center gap-x-4">
-                <Image src={"/Enlighten3D_logo.jpg"} alt="logo" width={70} height={50} />
+                <Image priority={true} src={"/Enlighten3D_logo.jpg"} alt="logo" width={70} height={70} className="h-auto" />
                 <MenuLinks isOpen={isOpen} />
             </div>
             <div className="flex items-center gap-x-10">

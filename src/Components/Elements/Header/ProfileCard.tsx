@@ -14,7 +14,7 @@ const ProfileCard = () => {
       userAuthInfo && setEmail(JSON.parse(userAuthInfo).email)
       userInfo && setCredit(JSON.parse(userInfo).billing.compute_unit)
     }
-  })
+  }, []);
   const MenuItem = ({ children, isLast, to = "/", ...rest }: { children: ReactNode, isLast?: boolean, to: string }) => {
     return (
       <Link href={to}>

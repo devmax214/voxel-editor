@@ -4,30 +4,51 @@ import React, { Suspense, useRef, useState, useEffect } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, RoundedBox, Environment } from "@react-three/drei";
 import * as THREE from "three";
-import usePLYLoader from "@/hooks/usePLYLoader";
+import { useBasicStore, useThreeStore } from "@/store";
 import { Voxel } from "utils/voxel";
 
 import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
+import { Loading } from "@ui/Spinner";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
 type VoxelsProps = {
-  voxels: Voxel[];
+  voxels: Voxel[] | null;
 }
 
-const Voxels: React.FC<VoxelsProps> = ({ voxels }) => (
-  <>
-    {voxels.map((voxel, index) => (
-      <RoundedBox key={index} args={voxel.size} position={voxel.position} radius={voxelSize / 20}>
-        <meshStandardMaterial color={0x00ff00} wireframe={false} />
-      </RoundedBox>
-      // <mesh key={index} position={voxel.position}>
-      //   <boxGeometry args={voxel.size} />
-      // </mesh>
-    ))}
-  </>
-);
+const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
+  if (!voxels)
+    return null;
+
+  return (
+    <>
+      {voxels.map((voxel, index) => (
+        <RoundedBox key={index} args={voxel.size} position={voxel.position} radius={voxelSize / 20}>
+          <meshStandardMaterial color={0x00ff00} wireframe={false} />
+        </RoundedBox>
+        // <mesh key={index} position={voxel.position}>
+        //   <boxGeometry args={voxel.size} />
+        // </mesh>
+      ))}
+    </>
+  );
+};
+
+type MeshProps = {
+  mesh: THREE.Mesh | null;
+}
+
+const MeshView: React.FC<MeshProps> = ({ mesh }) => {
+  if (!mesh)
+    return null;
+
+  return (
+    <>
+      <primitive object={mesh} />
+    </>
+  );
+}
 
 const SceneBackground: React.FC = () => {
   const { scene } = useThree();
@@ -41,22 +62,13 @@ const SceneBackground: React.FC = () => {
 
 const Scene: React.FC = () => {
   const controlsRef = useRef(null);
-  const [plyFile, setPlyFile] = useState<File | null>(null);
-
-  const voxelData = usePLYLoader(plyFile, voxelSize);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files?.length) {
-      setPlyFile(files[0]);
-    }
-  };
+  const { loading, viewMode } = useBasicStore();
+  const { voxels, mesh } = useThreeStore();
+  console.log(loading);
 
   return (
     <div className="canvas">
-      <div className="absolute z-10">
-        <input type='file' onChange={handleFileUpload} id="plyUpload" accept=".ply" />
-      </div>
+      <Loading isLoading={loading} />
       <ToolInfo />
       <StatusBar />
       <div className="w-full h-full">
@@ -67,7 +79,13 @@ const Scene: React.FC = () => {
           <ambientLight intensity={0.1} />
           <directionalLight position={[1, 1, 1]} intensity={1} />
           <Suspense fallback={null}>
-            {voxelData && <Voxels voxels={voxelData} />}
+            {
+              viewMode === 'voxel'
+              ?
+              <VoxelsView voxels={voxels} />
+              :
+              <MeshView mesh={mesh} />
+            }
           </Suspense>
           <OrbitControls ref={controlsRef} />
         </Canvas>

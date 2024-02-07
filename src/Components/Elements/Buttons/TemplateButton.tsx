@@ -5,10 +5,10 @@ interface templateButtonType extends ButtonProps {
     text: string
 }
 
-const TemplateButton = ({ text, ...props }: templateButtonType) => {
+const TemplateButton = (props: templateButtonType) => {
     return (
-        <Button colorScheme='black' variant='outline' {...props}>
-            {text}
+        <Button colorScheme='black' variant='outline'>
+            {props.children}
         </Button>
     )
 }

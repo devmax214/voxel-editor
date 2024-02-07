@@ -1,5 +1,6 @@
 'use client'
 import React, { useState, useEffect } from 'react';
+import firebase_app from '@/Firebase/config';
 import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import {
   Flex,
@@ -43,7 +44,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const handleShowClick = () => setShowPassword(!showPassword);
   const toast = useToast()
-  const auth = getAuth();
+  const auth = getAuth(firebase_app);
   const provider = new GoogleAuthProvider();
 
   const loginWithGoogle = async () => {
@@ -197,7 +198,7 @@ const Login = () => {
           borderRadius="20px"
         >
           {/* <Avatar bg="blue.500" alignSelf="center" /> */}
-          <Image alignSelf="center" src='/short-height-logo.jpg' height="40px" width="80px" />
+          <Image alignSelf="center" src='/short-height-logo.jpg' height="40px" width="80px" alt='miniLogo' />
           
           <Heading fontSize={26} textAlign="center" color="">Welcome to Enlighten 3D</Heading>
           <Text fontSize={14} textAlign="center" color="">Enter your email and password to get started.</Text>
@@ -205,8 +206,9 @@ const Login = () => {
             <InputGroup borderColor="yellow.600" _hover={{borderColor: "yellow.400"}}>
               <InputLeftElement
                 pointerEvents="none"
-                children={<CFaUserAlt color="yellow.800" />}
-              />
+              >
+                <CFaUserAlt color="yellow.800" />
+              </InputLeftElement>
               <Input value={email} 
                 onChange={e => setEmail(e.target.value)}
                 type="email"
@@ -219,8 +221,9 @@ const Login = () => {
               <InputLeftElement
                 pointerEvents="none"
                 color="yellow.800"
-                children={<CFaLock color="yellow.800" />}
-              />
+              >
+                <CFaLock color="yellow.800" />
+              </InputLeftElement>
               <Input
                 value={password}
                 onChange={e => setPassword(e.target.value)}  

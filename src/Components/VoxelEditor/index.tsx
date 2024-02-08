@@ -1,11 +1,10 @@
 'use client'
 
-import React, { Suspense, useRef, useState, useEffect } from "react";
-import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, RoundedBox, Environment } from "@react-three/drei";
+import React, { Suspense, useRef, useState, useEffect, useCallback } from "react";
+import { Canvas, useThree, ThreeEvent } from "@react-three/fiber";
+import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
-import { Voxel } from "utils/voxel";
 
 import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
@@ -13,24 +12,58 @@ import { Loading } from "@ui/Spinner";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
+type VoxelProps = {
+  position: THREE.Vector3;
+}
+
+const Voxel: React.FC<VoxelProps> = (props) => {
+  const [hover, set] = useState<number | null>(null);
+  const { removeMode } = useBasicStore();
+  const { addVoxel, removeVoxel, voxels } = useThreeStore();
+
+  const onMove = useCallback((e: ThreeEvent<PointerEvent>) => e.faceIndex && (e.stopPropagation(), set(Math.floor(e.faceIndex / 2))), []);
+  const onOut = useCallback(() => set(null), [])
+  const onClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    console.log(e.faceIndex);
+    if (e.faceIndex !== undefined) {
+      if (!removeMode) {
+        const { x, y, z } = props.position;
+        const dir = [
+          [x + voxelSize, y, z],
+          [x - voxelSize, y, z],
+          [x, y + voxelSize, z],
+          [x, y - voxelSize, z],
+          [x, y, z + voxelSize],
+          [x, y, z - voxelSize],
+        ];
+        const newPos = new THREE.Vector3(...dir[Math.floor(e.faceIndex / 2)]);
+        addVoxel(newPos);
+      }
+      else {
+        removeVoxel(props.position, voxelSize);
+      }
+    }
+  }, [removeMode, addVoxel, removeVoxel, props]);
+
+  return (
+    <mesh type="static" receiveShadow castShadow onPointerMove={onMove} onPointerOut={onOut} onClick={onClick} position={props.position}>
+      {[...Array(6)].map((_, index) => (
+        <meshStandardMaterial key={index} attach={`material-${index}`} color={hover === index ? 0xff0000 : 0x00ff00} />
+      ))}
+      <boxGeometry args={[voxelSize, voxelSize, voxelSize]} />
+    </mesh>
+  )
+} 
+
 type VoxelsProps = {
-  voxels: Voxel[] | null;
+  voxels: THREE.Vector3[];
 }
 
 const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
-  if (!voxels)
-    return null;
-
   return (
     <>
-      {voxels.map((voxel, index) => (
-        <RoundedBox key={index} args={voxel.size} position={voxel.position} radius={voxelSize / 20}>
-          <meshStandardMaterial color={0x00ff00} wireframe={false} />
-        </RoundedBox>
-        // <mesh key={index} position={voxel.position}>
-        //   <boxGeometry args={voxel.size} />
-        // </mesh>
-      ))}
+      {voxels.map((voxel, index) => (<Voxel key={index} position={voxel} />))}
     </>
   );
 };
@@ -64,7 +97,6 @@ const Scene: React.FC = () => {
   const controlsRef = useRef(null);
   const { loading, viewMode } = useBasicStore();
   const { voxels, mesh } = useThreeStore();
-  console.log(loading);
 
   return (
     <div className="canvas">
@@ -75,7 +107,7 @@ const Scene: React.FC = () => {
         <Canvas>
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 1, 3]} />
+          <PerspectiveCamera makeDefault position={[0, 0, 3]} />
           <ambientLight intensity={0.1} />
           <directionalLight position={[1, 1, 1]} intensity={1} />
           <Suspense fallback={null}>

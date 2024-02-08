@@ -3,11 +3,11 @@
 import { useState, useEffect } from "react";
 import * as THREE from "three";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader";
-import { voxelizeMesh, Voxel } from "utils/voxel";
+import { voxelizeMesh, Material } from "utils/voxel";
 import { useBasicStore } from "@/store";
 
 const usePLYLoader = (file: File | null, voxelSize: number) => {
-  const [vertices, setVertices] = useState<Voxel[] | null>(null);
+  const [vertices, setVertices] = useState<THREE.Vector3[]>([]);
   const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
   const { setLoading } = useBasicStore();
 
@@ -31,12 +31,8 @@ const usePLYLoader = (file: File | null, voxelSize: number) => {
           const loader = new PLYLoader();
           const geometry = loader.parse(arrayBuffer as ArrayBuffer);
           geometry.computeVertexNormals();
-          const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: false });
-          material.side = THREE.DoubleSide;
-          material.transparent = true;
-          material.opacity = 0.5;
           
-          const mesh = new THREE.Mesh(geometry, material);
+          const mesh = new THREE.Mesh(geometry, Material);
           const vertices = voxelizeMesh(mesh, voxelSize);
           setMesh(mesh);
           setVertices(vertices);

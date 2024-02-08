@@ -10,6 +10,9 @@ interface BasicState {
 
   meshReqStatus: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'RETRIED' | '';
   setMeshReqStatus: (meshReqStatus: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'RETRIED' | '') => void;
+
+  removeMode: boolean;
+  setRemoveMode: (addMode: boolean) => void;
 }
 
 export const useBasicStore = create<BasicState>((set) => ({
@@ -21,18 +24,27 @@ export const useBasicStore = create<BasicState>((set) => ({
 
   meshReqStatus: '',
   setMeshReqStatus: (meshReqStatus: "" | "COMPLETED" | "FAILED" | "IN_PROGRESS" | "IN_QUEUE" | "RETRIED") => set({ meshReqStatus }),
+
+  removeMode: false,
+  setRemoveMode: (removeMode: boolean) => set({ removeMode }),
 }));
 
 interface ThreeState {
-  voxels: THREE.Vector3[] | null;
-  setVoxels: (voxels: THREE.Vector3[] | null) => void;
+  voxels: THREE.Vector3[];
+  setVoxels: (voxels: THREE.Vector3[]) => void;
+  addVoxel: (voxel: THREE.Vector3) => void;
+  removeVoxel: (voxel: THREE.Vector3, voxelSize: number) => void;
+
   mesh: THREE.Mesh | null;
   setMesh: (mesh: THREE.Mesh | null) => void;
 }
 
 export const useThreeStore = create<ThreeState>((set) => ({
-  voxels: null,
-  setVoxels: (voxels: THREE.Vector3[] | null) => set({ voxels }),
+  voxels: [],
+  setVoxels: (voxels: THREE.Vector3[]) => set({ voxels }),
+  addVoxel: (voxel: THREE.Vector3) => set((state) => ({ voxels: [...state.voxels, voxel] })),
+  removeVoxel: (voxel: THREE.Vector3) => set((state) => ({ voxels: state.voxels.filter((v) => v.x!== voxel.x || v.y!== voxel.y || v.z!== voxel.z )})),
+
   mesh: null,
   setMesh: (mesh: THREE.Mesh | null) => set({ mesh }),
 }));

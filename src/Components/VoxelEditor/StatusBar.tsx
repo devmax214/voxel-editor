@@ -172,7 +172,7 @@ const PromptEditor = () => {
   return (
     <div className="flex gap-x-2 w-96">
       <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
-      <Button onClick={handleGenerate}>Generate</Button>
+      <Button onClick={handleGenerate} disabled={propmt === ''}>Generate</Button>
     </div>
   );
 }

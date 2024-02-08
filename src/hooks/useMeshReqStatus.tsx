@@ -14,10 +14,10 @@ interface MeshData {
 }
 
 const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
-  const [vertices, setVertices] = useState<THREE.Vector3[] | null>(null);
+  const [vertices, setVertices] = useState<THREE.Vector3[]>([]);
   const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
   const { setLoading } = useBasicStore();
-  
+  // const sleep = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
   useEffect(() => {
     if (!meshData) return;
 
@@ -46,6 +46,7 @@ const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
         }
         
         const geometry = await convertData(meshData);
+        // await sleep(3000);
         const mesh = new THREE.Mesh(geometry, Material)
         const vertices = voxelizeMesh(mesh, voxelSize);
         setMesh(mesh);

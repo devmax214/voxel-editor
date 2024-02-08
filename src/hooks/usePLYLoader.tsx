@@ -7,7 +7,7 @@ import { voxelizeMesh, Material } from "utils/voxel";
 import { useBasicStore } from "@/store";
 
 const usePLYLoader = (file: File | null, voxelSize: number) => {
-  const [vertices, setVertices] = useState<THREE.Vector3[] | null>(null);
+  const [vertices, setVertices] = useState<THREE.Vector3[]>([]);
   const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
   const { setLoading } = useBasicStore();
 

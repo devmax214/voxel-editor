@@ -1,8 +1,8 @@
 'use client'
 
-import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo, PointerEventHandler, useLayoutEffect } from "react";
+import React, { Suspense, useRef, useState, useEffect, useCallback } from "react";
 import { Canvas, useThree, ThreeEvent } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, RoundedBox, Environment } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
 
@@ -12,63 +12,59 @@ import { Loading } from "@ui/Spinner";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
+type VoxelProps = {
+  position: THREE.Vector3;
+}
+
+const Voxel: React.FC<VoxelProps> = (props) => {
+  const [hover, set] = useState<number | null>(null);
+  const { removeMode } = useBasicStore();
+  const { addVoxel, removeVoxel, voxels } = useThreeStore();
+
+  const onMove = useCallback((e: ThreeEvent<PointerEvent>) => e.faceIndex && (e.stopPropagation(), set(Math.floor(e.faceIndex / 2))), []);
+  const onOut = useCallback(() => set(null), [])
+  const onClick = useCallback((e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    console.log(e.faceIndex);
+    if (e.faceIndex !== undefined) {
+      if (!removeMode) {
+        const { x, y, z } = props.position;
+        const dir = [
+          [x + voxelSize, y, z],
+          [x - voxelSize, y, z],
+          [x, y + voxelSize, z],
+          [x, y - voxelSize, z],
+          [x, y, z + voxelSize],
+          [x, y, z - voxelSize],
+        ];
+        const newPos = new THREE.Vector3(...dir[Math.floor(e.faceIndex / 2)]);
+        addVoxel(newPos);
+      }
+      else {
+        removeVoxel(props.position, voxelSize);
+      }
+    }
+  }, [removeMode, addVoxel, removeVoxel, props]);
+
+  return (
+    <mesh type="static" receiveShadow castShadow onPointerMove={onMove} onPointerOut={onOut} onClick={onClick} position={props.position}>
+      {[...Array(6)].map((_, index) => (
+        <meshStandardMaterial key={index} attach={`material-${index}`} color={hover === index ? 0xff0000 : 0x00ff00} />
+      ))}
+      <boxGeometry args={[voxelSize, voxelSize, voxelSize]} />
+    </mesh>
+  )
+} 
+
 type VoxelsProps = {
-  voxels: THREE.Vector3[] | null;
+  voxels: THREE.Vector3[];
 }
 
 const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
-  const rollOverMeshRef = useRef<THREE.Mesh>(null);
-  const [attachables, setAttachables] = useState<THREE.Mesh[]>([]);
-  const { camera, size, scene } = useThree();
-  const rayCaster = new THREE.Raycaster();
-
-  const geometry = useMemo(() => {
-    return new THREE.BoxGeometry(voxelSize, voxelSize, voxelSize);
-  }, []);
-  const material = useMemo(() => {
-    return new THREE.MeshBasicMaterial({
-      color: 'blue',
-      opacity: 0.5,
-      transparent: true,
-    });
-  }, []);
-
-  useEffect(() => {
-    if (voxels) {
-      let tmp = voxels.map(voxel => new THREE.Mesh(geometry, material));
-      setAttachables(tmp);
-    }
-  }, [voxels]);
-
-  
-  const handlePointerMove = (event: ThreeEvent<PointerEvent>) => {
-    const save = camera.position.clone();
-    rayCaster.setFromCamera(event.pointer, camera);
-    const intersects = rayCaster.intersectObjects(attachables);
-    if (intersects.length > 0) {
-      const intersect = intersects[0];
-      rollOverMeshRef.current?.position.copy(intersect.point).add(intersect.face!.normal);
-      rollOverMeshRef.current?.position.divideScalar(voxelSize).floor().multiplyScalar(voxelSize).addScalar(voxelSize/2)
-    }
-    camera.position.set(save.x, save.y, save.z);
-  }
-
-  if (!voxels)
-    return null;
-
   return (
-    <group onPointerMove={handlePointerMove}>
-      <mesh ref={rollOverMeshRef}>
-        <boxGeometry args={[voxelSize, voxelSize, voxelSize]} />
-        <meshStandardMaterial color={0x00ff00} transparent={true} opacity={0.5} wireframe={false} />
-      </mesh>
-
-      {voxels.map((voxel, index) => (
-        <RoundedBox key={index} args={[voxelSize, voxelSize, voxelSize]} position={voxel} radius={voxelSize / 20}>
-          <meshStandardMaterial color={0x00ff00} wireframe={false} />
-        </RoundedBox>
-      ))}
-    </group>
+    <>
+      {voxels.map((voxel, index) => (<Voxel key={index} position={voxel} />))}
+    </>
   );
 };
 
@@ -101,8 +97,6 @@ const Scene: React.FC = () => {
   const controlsRef = useRef(null);
   const { loading, viewMode } = useBasicStore();
   const { voxels, mesh } = useThreeStore();
-
-  console.log(loading);
 
   return (
     <div className="canvas">

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { Voxel } from './types';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SERVER_BASE_URL
 
@@ -54,7 +55,7 @@ export async function creditExist(uid: string) {
   }
 }
 
-export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: JSON) {
+export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: Voxel[]) {
   const requestUrl = encodeURI(BASE_URL + '/voxelCreated');
   try {
     const axiosResponse = await axios.post(requestUrl, { uid, projectId, usedPrice, voxelData });
@@ -78,7 +79,7 @@ export async function startStage2(projectId: string) {
   }
 }
 
-export async function updateVoxel(projectId: string, voxelData: JSON) {
+export async function updateVoxel(projectId: string, voxelData: Voxel[]) {
   const requestUrl = encodeURI(BASE_URL + '/updateVoxel');
   try {
     const axiosResponse = await axios.post(requestUrl, { projectId, voxelData });

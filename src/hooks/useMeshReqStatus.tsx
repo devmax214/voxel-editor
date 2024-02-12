@@ -15,7 +15,7 @@ interface MeshData {
 
 const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
   const [vertices, setVertices] = useState<THREE.Vector3[]>([]);
-  const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
+  const [mesh, setMesh] = useState<THREE.BufferGeometry | null>(null);
   const { setLoading } = useBasicStore();
   // const sleep = (ms:number) => new Promise(resolve => setTimeout(resolve, ms));
   useEffect(() => {
@@ -49,7 +49,7 @@ const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
         // await sleep(3000);
         const mesh = new THREE.Mesh(geometry, Material)
         const vertices = voxelizeMesh(mesh, voxelSize);
-        setMesh(mesh);
+        setMesh(geometry);
         setVertices(vertices);
       } catch (error) {
         console.error("Error loading data:", error);

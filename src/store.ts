@@ -30,21 +30,27 @@ export const useBasicStore = create<BasicState>((set) => ({
 }));
 
 interface ThreeState {
+  projectName: string;
+  setProjectName: (projectName: string) => void;
+
   voxels: THREE.Vector3[];
   setVoxels: (voxels: THREE.Vector3[]) => void;
   addVoxel: (voxel: THREE.Vector3) => void;
   removeVoxel: (voxel: THREE.Vector3, voxelSize: number) => void;
 
-  mesh: THREE.Mesh | null;
-  setMesh: (mesh: THREE.Mesh | null) => void;
+  mesh: THREE.BufferGeometry | null;
+  setMesh: (mesh: THREE.BufferGeometry | null) => void;
 }
 
 export const useThreeStore = create<ThreeState>((set) => ({
+  projectName: '',
+  setProjectName: (projectName: string) => set({ projectName }),
+
   voxels: [],
   setVoxels: (voxels: THREE.Vector3[]) => set({ voxels }),
   addVoxel: (voxel: THREE.Vector3) => set((state) => ({ voxels: [...state.voxels, voxel] })),
   removeVoxel: (voxel: THREE.Vector3) => set((state) => ({ voxels: state.voxels.filter((v) => v.x!== voxel.x || v.y!== voxel.y || v.z!== voxel.z )})),
 
   mesh: null,
-  setMesh: (mesh: THREE.Mesh | null) => set({ mesh }),
+  setMesh: (mesh: THREE.BufferGeometry | null) => set({ mesh }),
 }));

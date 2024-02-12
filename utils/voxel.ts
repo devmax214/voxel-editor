@@ -25,4 +25,4 @@ function isInsideMesh(pos: THREE.Vector3, mesh: THREE.Mesh) {
   return rayCasterIntersects.length % 2 === 1;
 }
 
-export const Material = new THREE.MeshPhongMaterial({ color: 0x00ff00, wireframe: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 });
+export const Material = new THREE.MeshPhysicalMaterial({ color: 0x00ff00, wireframe: false, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.5 });

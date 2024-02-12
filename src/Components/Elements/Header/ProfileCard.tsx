@@ -1,20 +1,11 @@
 'use-client'
 import { ReactNode, useEffect, useState } from 'react'
 import { Avatar, Box, Button, Flex, Link, Text } from '@chakra-ui/react'
+import { useAuthContext } from '@/contexts/authContext'
 
 const ProfileCard = () => {
-  
-  const [email, setEmail] = useState('')
-  const [credit, setCredit] = useState(0)
+  const { user, userInfo } = useAuthContext();
 
-  useEffect(()=>{
-    if (typeof window !== 'undefined'){
-      const  userAuthInfo = localStorage.getItem('userAuthInfo')
-      const  userInfo = localStorage.getItem('userInfo')
-      userAuthInfo && setEmail(JSON.parse(userAuthInfo).email)
-      userInfo && setCredit(JSON.parse(userInfo).billing.compute_unit)
-    }
-  }, []);
   const MenuItem = ({ children, isLast, to = "/", ...rest }: { children: ReactNode, isLast?: boolean, to: string }) => {
     return (
       <Link href={to}>
@@ -32,8 +23,8 @@ const ProfileCard = () => {
       </Flex>
 
       <Flex flexDir={'column'}>
-        <Text fontSize='md'>{email}</Text>
-        <Text fontSize='md'>Credit: {credit}</Text>
+        <Text fontSize='md'>{user?.email}</Text>
+        <Text fontSize='md'>Credit: {userInfo?.billing.compute_unit}</Text>
       </Flex>
     </Flex>
   )

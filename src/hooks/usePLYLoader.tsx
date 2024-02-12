@@ -8,7 +8,7 @@ import { useBasicStore } from "@/store";
 
 const usePLYLoader = (file: File | null, voxelSize: number) => {
   const [vertices, setVertices] = useState<THREE.Vector3[]>([]);
-  const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
+  const [mesh, setMesh] = useState<THREE.BufferGeometry | null>(null);
   const { setLoading } = useBasicStore();
 
   useEffect(() => {
@@ -34,7 +34,7 @@ const usePLYLoader = (file: File | null, voxelSize: number) => {
           
           const mesh = new THREE.Mesh(geometry, Material);
           const vertices = voxelizeMesh(mesh, voxelSize);
-          setMesh(mesh);
+          setMesh(geometry);
           setVertices(vertices);
         }
       } catch (error) {

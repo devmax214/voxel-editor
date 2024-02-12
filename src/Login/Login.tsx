@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
-import firebase_app from '@/Firebase/config';
-import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { auth } from '@/Firebase/config';
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import {
   Flex,
   Heading,
@@ -24,39 +24,27 @@ import {
 import { FaUserAlt, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { useRouter } from 'next/navigation';
-import { getUserInfo } from 'utils/api';
 import { useToast } from '@chakra-ui/react'
+import { useAuthContext } from '@/contexts/authContext';
 
 const CFaUserAlt = chakra(FaUserAlt);
 const CFaLock = chakra(FaLock);
 
 const Login = () => {
   const router = useRouter();
-
-  useEffect(()=>{
-    if (typeof window !== 'undefined'){
-      const userInfo = localStorage.getItem('userAuthInfo')
-      if(userInfo) router.push('/')
-    }
-  },[router]);
+  const { setUser } = useAuthContext();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const handleShowClick = () => setShowPassword(!showPassword);
   const toast = useToast()
-  const auth = getAuth(firebase_app);
   const provider = new GoogleAuthProvider();
 
   const loginWithGoogle = async () => {
     try {
-      const result = await signInWithPopup(auth, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      // @ts-ignore
-      const token = credential.accessToken;
-      localStorage.setItem('userAuthInfo', JSON.stringify(result.user));
-      const userInfo = await getUserInfo(result.user.uid);
-      localStorage.setItem('userInfo', JSON.stringify(userInfo));
-      console.log('=======credential of login with google=======', result.user);
+      const userCredential = await signInWithPopup(auth, provider);
+      setUser(userCredential.user);
       toast({
         title: 'Success',
         description: "You've logged in successfully.",
@@ -65,7 +53,6 @@ const Login = () => {
         duration: 3000,
         isClosable: true,
       });
-      router.push('/');
     } catch (error) {
       console.error('Error signing in with Google:', error);
     }
@@ -140,10 +127,8 @@ const Login = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       // Signed in
-      localStorage.setItem('userAuthInfo', JSON.stringify(userCredential.user));
+      setUser(userCredential.user);
       
-      const userInfo = await getUserInfo(userCredential.user.uid);
-      localStorage.setItem('userInfo', JSON.stringify(userInfo))
       toast({
         title: 'Success',
         description: "You've logged in successfully.",
@@ -169,10 +154,8 @@ const Login = () => {
   const logout = () => {
     signOut(auth)
       .then(() => {
-          localStorage.removeItem('userAuthInfo')
-          localStorage.removeItem('userInfo')
           // Sign-out successful.
-          // setUser(null);
+          setUser(null);
       })
       .catch((error) => {
           console.error('Error signing out:', error);

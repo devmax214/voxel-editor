@@ -8,7 +8,8 @@ import { useBasicStore, useThreeStore } from "@/store";
 
 import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
-import { Loading } from "@ui/Spinner";
+import InfoBox from "./InfoBox";
+import { Material } from "utils/voxel";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -19,13 +20,12 @@ type VoxelProps = {
 const Voxel: React.FC<VoxelProps> = (props) => {
   const [hover, set] = useState<number | null>(null);
   const { removeMode } = useBasicStore();
-  const { addVoxel, removeVoxel, voxels } = useThreeStore();
+  const { addVoxel, removeVoxel } = useThreeStore();
 
   const onMove = useCallback((e: ThreeEvent<PointerEvent>) => e.faceIndex && (e.stopPropagation(), set(Math.floor(e.faceIndex / 2))), []);
   const onOut = useCallback(() => set(null), [])
   const onClick = useCallback((e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    console.log(e.faceIndex);
     if (e.faceIndex !== undefined) {
       if (!removeMode) {
         const { x, y, z } = props.position;
@@ -51,7 +51,7 @@ const Voxel: React.FC<VoxelProps> = (props) => {
       {[...Array(6)].map((_, index) => (
         <meshStandardMaterial key={index} attach={`material-${index}`} color={hover === index ? 0xff0000 : 0x00ff00} />
       ))}
-      <boxGeometry args={[voxelSize, voxelSize, voxelSize]} />
+      <boxGeometry args={[voxelSize * 0.99, voxelSize * 0.99, voxelSize * 0.99]} />
     </mesh>
   )
 } 
@@ -69,17 +69,17 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
 };
 
 type MeshProps = {
-  mesh: THREE.Mesh | null;
+  mesh: THREE.BufferGeometry | null;
 }
 
 const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   if (!mesh)
     return null;
 
+  const data = new THREE.Mesh(mesh, Material);
+  
   return (
-    <>
-      <primitive object={mesh} />
-    </>
+    <primitive object={data} />
   );
 }
 
@@ -95,12 +95,14 @@ const SceneBackground: React.FC = () => {
 
 const Scene: React.FC = () => {
   const controlsRef = useRef(null);
-  const { loading, viewMode } = useBasicStore();
+  const { viewMode } = useBasicStore();
   const { voxels, mesh } = useThreeStore();
+
+  console.log(voxels);
 
   return (
     <div className="canvas">
-      <Loading isLoading={loading} />
+      <InfoBox />
       <ToolInfo />
       <StatusBar />
       <div className="w-full h-full">

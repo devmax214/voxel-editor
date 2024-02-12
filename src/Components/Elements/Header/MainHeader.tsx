@@ -1,10 +1,11 @@
 'use client'
 
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { ReactNode, useState, useEffect } from "react";
 import { Input } from "@chakra-ui/react";
-import { Link, Box, Flex, Text, Stack, Button } from "@chakra-ui/react";
+import { Box, Flex, Text, Stack, Button } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -59,7 +60,6 @@ const MenuLinks = ({ isOpen }: { isOpen: boolean }) => {
                 pt={[4, 4, 0, 0]}
             >
                 <MenuItem to="/">Home</MenuItem>
-                <MenuItem to="/editor"> Editor </MenuItem>
             </Stack>
         </Box>
     );

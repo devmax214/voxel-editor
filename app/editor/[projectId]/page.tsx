@@ -22,8 +22,10 @@ export default function Page({ params }: Props) {
       const current = projects.filter(project => project.id === projectId)[0];
       if (current) {
         setProjectName(current.name);
-        const voxelData = current.voxelData.map(pos => new THREE.Vector3(pos.x, pos.y, pos.z));
-        setVoxels(voxelData);
+        if (typeof current.voxelData === "object") {
+          const voxelData = current.voxelData.map(pos => new THREE.Vector3(pos.x, pos.y, pos.z));
+          setVoxels(voxelData);
+        }
       }
     }
   }, [projects, projectId, setProjectName, setVoxels]);

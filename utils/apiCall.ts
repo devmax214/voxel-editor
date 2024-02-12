@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BASE_URL = process.env.NEXT_PUBLIC_AI_BASE_URL;
-const API_KEY = process.env.NEXT_PUBLIC_APIKEY;
+const API_KEY = process.env.NEXT_PUBLIC_AI_APIKEY;
 
 const apiCall = axios.create({
   baseURL: BASE_URL,

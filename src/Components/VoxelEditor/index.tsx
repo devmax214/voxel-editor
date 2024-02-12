@@ -98,8 +98,6 @@ const Scene: React.FC = () => {
   const { viewMode } = useBasicStore();
   const { voxels, mesh } = useThreeStore();
 
-  console.log(voxels);
-
   return (
     <div className="canvas">
       <InfoBox />

@@ -23,7 +23,15 @@ export const MainLayout: FC<PropsWithChildren> = ({ children }) => {
     const fetchProjects = async (userId: string) => {
       try {
         const res = await getProjectsByUid(userId);
-        setProjects(res.projects.map((project: any) => ({id: project.id, ...project.data})));
+        const projects = res.projects.map((project: any) => {
+          const voxelData = project.data.voxelData === "" ? [] : project.data.voxelData;
+          return {
+            ...project.data,
+            id: project.id,
+            voxelData: voxelData
+          }
+        });
+        setProjects(projects);
       } catch (error) {
         console.log(`Project fetching error: ${error}`);
       }

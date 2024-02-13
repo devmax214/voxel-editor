@@ -23,6 +23,7 @@ const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
 
     const loadData = async () => {
       try {
+        console.log("load");
         setLoading(true);
         const convertData = async (meshData: MeshData) => {
           const tmpGeometry = new THREE.BufferGeometry();
@@ -47,10 +48,12 @@ const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
         
         const geometry = await convertData(meshData);
         // await sleep(3000);
-        const mesh = new THREE.Mesh(geometry, Material)
-        const vertices = voxelizeMesh(mesh, voxelSize);
+        // const mesh = new THREE.Mesh(geometry, Material)
+        console.log("voxelize");
+        const vertices = voxelizeMesh(geometry, voxelSize);
         setMesh(geometry);
         setVertices(vertices);
+        console.log("done");
       } catch (error) {
         console.error("Error loading data:", error);
       } finally {

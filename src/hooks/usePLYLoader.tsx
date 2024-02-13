@@ -32,8 +32,8 @@ const usePLYLoader = (file: File | null, voxelSize: number) => {
           const geometry = loader.parse(arrayBuffer as ArrayBuffer);
           geometry.computeVertexNormals();
           
-          const mesh = new THREE.Mesh(geometry, Material);
-          const vertices = voxelizeMesh(mesh, voxelSize);
+          // const mesh = new THREE.Mesh(geometry, Material);
+          const vertices = voxelizeMesh(geometry, voxelSize);
           setMesh(geometry);
           setVertices(vertices);
         }

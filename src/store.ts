@@ -36,7 +36,7 @@ interface ThreeState {
   voxels: THREE.Vector3[];
   setVoxels: (voxels: THREE.Vector3[]) => void;
   addVoxel: (voxel: THREE.Vector3) => void;
-  removeVoxel: (voxel: THREE.Vector3, voxelSize: number) => void;
+  removeVoxel: (voxel: THREE.Vector3) => void;
 
   mesh: THREE.BufferGeometry | null;
   setMesh: (mesh: THREE.BufferGeometry | null) => void;

@@ -39,8 +39,7 @@ const useMeshReqStatus = (meshData: MeshData | null, voxelSize: number) => {
           for (let i = 0; i < meshData.faces.length; i++) {
             indices.push(...meshData.faces[i]);
           }
-          const arrayType = meshData.vertices.length / 3 > 65535 ? Uint32Array : Uint16Array;
-          const indicesArray = new arrayType(indices);
+          const indicesArray = new Uint32Array(indices);
           tmpGeometry.setIndex(new THREE.BufferAttribute(indicesArray, 1));
           tmpGeometry.computeVertexNormals();
           return tmpGeometry;

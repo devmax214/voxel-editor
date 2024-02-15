@@ -73,7 +73,7 @@ const Home = () => {
               <TemplateButton text='Create New' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} onClick={handleCreateNew} />
             </Flex>
           </GridItem>
-          <GridItem colSpan={8} p={2} ml={-12}>
+          {/* <GridItem colSpan={8} p={2} ml={-12}>
             <Text fontSize='md'>Create from my template</Text>
             <Flex mt={3} gap={2}>
               <TemplateButton text='Template 1' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
@@ -92,7 +92,7 @@ const Home = () => {
               <TemplateButton text='Template 5' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
               <TemplateButton text='Template 6' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
             </Flex>
-          </GridItem>
+          </GridItem> */}
         </Grid>
       </Container>
 

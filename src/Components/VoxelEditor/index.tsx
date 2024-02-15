@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { Canvas, useThree, ThreeEvent, useFrame } from "@react-three/fiber";
+import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -10,51 +10,17 @@ import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
 import InfoBox from "./InfoBox";
 import { Material } from "utils/voxel";
+import { useParams } from "next/navigation";
+import { useAuthContext } from "@/contexts/authContext";
+import { useProjectContext } from "@/contexts/projectContext";
+import { useToast } from "@chakra-ui/react";
+import { voxelCreated, updateVoxel } from "utils/api";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
 type VoxelProps = {
   position: THREE.Vector3;
 }
-
-const Voxel: React.FC<VoxelProps> = (props) => {
-  const [hover, set] = useState<number | null>(null);
-  const { removeMode } = useBasicStore();
-  const { addVoxel, removeVoxel } = useThreeStore();
-
-  const onMove = useCallback((e: ThreeEvent<PointerEvent>) => e.faceIndex && (e.stopPropagation(), set(Math.floor(e.faceIndex / 2))), []);
-  const onOut = useCallback(() => set(null), [])
-  const onClick = useCallback((e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    if (e.faceIndex !== undefined) {
-      if (!removeMode) {
-        const { x, y, z } = props.position;
-        const dir = [
-          [x + voxelSize, y, z],
-          [x - voxelSize, y, z],
-          [x, y + voxelSize, z],
-          [x, y - voxelSize, z],
-          [x, y, z + voxelSize],
-          [x, y, z - voxelSize],
-        ];
-        const newPos = new THREE.Vector3(...dir[Math.floor(e.faceIndex / 2)]);
-        addVoxel(newPos);
-      }
-      else {
-        removeVoxel(props.position);
-      }
-    }
-  }, [removeMode, addVoxel, removeVoxel, props]);
-
-  return (
-    <mesh type="static" receiveShadow castShadow onPointerMove={onMove} onPointerOut={onOut} onClick={onClick} position={props.position}>
-      {[...Array(6)].map((_, index) => (
-        <meshStandardMaterial key={index} attach={`material-${index}`} color={hover === index ? 0xff0000 : 0x00ff00} />
-      ))}
-      <boxGeometry args={[voxelSize * 0.99, voxelSize * 0.99, voxelSize * 0.99]} />
-    </mesh>
-  )
-} 
 
 type VoxelsProps = {
   voxels: THREE.Vector3[];
@@ -64,9 +30,23 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
   const tempBoxes = useMemo(() => new THREE.Object3D(), []);
   const tmpBox = useRef<THREE.Mesh>(null);
   const [tmpPos, setTmpPos] = useState<THREE.Vector3 | undefined>(undefined);
-  
-  const boxGeometry = useMemo(() => new THREE.BoxGeometry(voxelSize * 0.99, voxelSize * 0.99, voxelSize * 0.99), []);
-  const material = useMemo(() => new THREE.MeshStandardMaterial({color: 0x00ff00}), []);
+
+  const aoMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_AO_2K.jpg");
+  const colMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_COL_2K.jpg");
+  const glossMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_GLOSS_2K.jpg");
+  const normalMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_NRM_2K.jpg");
+  const metalnessMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_REFL_2K.jpg");
+
+  const boxGeometry = useMemo(() => new THREE.BoxGeometry(voxelSize * 0.98, voxelSize * 0.98, voxelSize * 0.98), []);
+  const material = useMemo(() => new THREE.MeshPhysicalMaterial({
+    side: THREE.DoubleSide,
+    wireframe: false,
+    map: colMap,
+    aoMap: aoMap,
+    normalMap: normalMap,
+    specularColorMap: metalnessMap,
+    roughnessMap: glossMap
+  }), [aoMap, colMap, normalMap, metalnessMap, glossMap]);
   const ref = useRef<THREE.InstancedMesh>(null);
   const { raycaster, mouse, camera } = useThree();
 
@@ -148,12 +128,9 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
   }, [voxels, camera, mouse, raycaster, removeMode, addVoxel, removeVoxel]);
 
   return (
-    // <group>
-    //   {voxels.map((voxel, index) => (<Voxel key={index} position={voxel} />))}
-    // </group>
     <>
       {tmpPos && <mesh ref={tmpBox} position={tmpPos}>
-        <boxGeometry args={[voxelSize * 0.99, voxelSize * 0.99, voxelSize * 0.99]} />
+        <boxGeometry args={[voxelSize * 0.98, voxelSize * 0.98, voxelSize * 0.98]} />
       </mesh>}
       <instancedMesh ref={ref} args={[boxGeometry, material, voxels.length]} onPointerMove={onMove} onPointerLeave={onOut} onClick={onClick} />
     </>
@@ -185,16 +162,85 @@ const SceneBackground: React.FC = () => {
   return null;
 }
 
+const Views: React.FC = () => {
+  const params = useParams();
+  const projectId = params?.projectId as string;
+  const { user } = useAuthContext();
+  const { projects, updateProject } = useProjectContext();
+  const { gl } = useThree();
+  const { viewMode, setLoading } = useBasicStore();
+  const { voxels, mesh } = useThreeStore();
+  const toast = useToast();
+
+  const save = useCallback(async (e: KeyboardEvent) => {
+    if (e.code === "Backslash" && user) {
+      e.preventDefault();
+      gl.domElement.toBlob((blob) => {
+        if (blob) {
+          const img = new Image();
+          img.src = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = img.src;
+          link.download = 'screenshot.png';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+      }, 'image/png');
+
+      setLoading(true);
+      const current = projects.filter(project => project.id === projectId)[0];
+      const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+      if (current.voxelData.length === 0) {
+          const res = await voxelCreated(user.uid, projectId, 10, voxelData);
+          updateProject(projectId, { status: res.project.status, voxelData: voxelData });
+      } else {
+          const res = await updateVoxel(projectId, voxelData);
+          updateProject(projectId, { voxelData: voxelData });
+      }
+      setLoading(false);
+      toast({
+          title: 'Success',
+          description: "You saved voxel data successfully.",
+          status: 'success',
+          position: 'top',
+          duration: 3000,
+          isClosable: true,
+      });
+    }
+  },
+  [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
+  );
+
+  useEffect(() => {
+    document.addEventListener('keyup', save);
+
+    return () => {
+      document.removeEventListener('keyup', save);
+    }
+  }, [save]);
+
+  return (
+    <>
+      {
+        viewMode === 'voxel'
+        ?
+        <VoxelsView voxels={voxels} />
+        :
+        <MeshView mesh={mesh} />
+      }
+    </>
+  )
+}
+
 const Scene: React.FC = () => {
   const controlsRef = useRef(null);
-  const { viewMode } = useBasicStore();
-  const { voxels, mesh } = useThreeStore();
 
   return (
     <div className="canvas">
       <InfoBox />
-      <ToolInfo />
       <StatusBar />
+      <ToolInfo />
       <div className="w-full h-full">
         <Canvas
           dpr={[1, 1]}
@@ -203,17 +249,12 @@ const Scene: React.FC = () => {
         >
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 0, 3]} />
-          <ambientLight intensity={0.1} />
+          <PerspectiveCamera makeDefault position={[0, 3, 3]} />
+          <ambientLight intensity={0.5} />
+          <pointLight intensity={0.8} position={[0, 0, 3]} />
           <directionalLight position={[1, 1, 1]} intensity={1} />
           <Suspense fallback={null}>
-            {
-              viewMode === 'voxel'
-              ?
-              <VoxelsView voxels={voxels} />
-              :
-              <MeshView mesh={mesh} />
-            }
+            <Views />
           </Suspense>
           <OrbitControls ref={controlsRef} />
         </Canvas>

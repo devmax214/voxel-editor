@@ -4,20 +4,19 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
 import { ReactNode, useState, useEffect } from "react";
-import { Input } from "@chakra-ui/react";
-import { Box, Flex, Text, Stack, Button } from "@chakra-ui/react";
+import { Box, Flex, Text, Stack, Button, Input } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
 import { useBasicStore, useThreeStore } from "@/store";
 import { changeProjectName } from "utils/api";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useAuthContext } from "@/contexts/authContext";
-import { voxelCreated, updateVoxel } from "utils/api";
 
 const MainHeader = (props: GridProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const toggle = () => setIsOpen(prev => !prev);
     const pathName = usePathname();
+    const { user } = useAuthContext();
 
     return (
         <NavBarContainer {...props}>
@@ -29,9 +28,9 @@ const MainHeader = (props: GridProps) => {
                 <FileNamgeChanger />
                 <FileActionBar />
             </div>}
-            <div className="flex items-center gap-x-4">
+            {user && <div className="flex items-center gap-x-4">
                 <ProfileCard />
-            </div>
+            </div>}
         </NavBarContainer>
     );
 };
@@ -129,27 +128,14 @@ const FileNamgeChanger = () => {
 }
 
 const FileActionBar = () => {
-    const params = useParams();
-    const projectId = params?.projectId as string;
-    const { user } = useAuthContext();
-    const { projects, updateProject } = useProjectContext();
-    const { setLoading } = useBasicStore();
-    const { voxels } = useThreeStore();
+    const handleSave = () => {
+        const evt = new KeyboardEvent('keyup', {
+            bubbles: true,
+            cancelable: true,
+            code: "Backslash"
+        });
 
-    const handleSave = async () => {
-        if (user) {
-            setLoading(true);
-            const current = projects.filter(project => project.id === projectId)[0];
-            const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
-            if (current.voxelData.length === 0) {
-                const res = await voxelCreated(user.uid, projectId, 10, voxelData);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData });
-            } else {
-                const res = await updateVoxel(projectId, voxelData);
-                updateProject(projectId, { voxelData: voxelData });
-            }
-            setLoading(false);
-        }
+        document.dispatchEvent(evt);
     }
 
     return (

@@ -51,10 +51,12 @@ const CardView = ({
               <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' />
             </Link>
           </Box>
-          {(progress || progress == 0) && 
+          {progress ? 
             <Progress colorScheme='blue' w={'110px'} bg={'gray.300'} height='20px' value={progress} hasStripe mx={2}>
               {progress}
             </Progress>
+            :
+            <p className="w-[110px] px-2">Not Started</p>
           }
           <p className="text-lg">{name || "undefined"}</p>
         </Flex>

@@ -2,7 +2,9 @@
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment } from "@react-three/drei";
+import { OBJLoader } from 'three-stdlib';
+import { MTLLoader } from 'three-stdlib';
+import { OrbitControls, PerspectiveCamera, Environment, Plane } from "@react-three/drei";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
 
@@ -17,10 +19,6 @@ import { useToast } from "@chakra-ui/react";
 import { voxelCreated, updateVoxel } from "utils/api";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
-
-type VoxelProps = {
-  position: THREE.Vector3;
-}
 
 type VoxelsProps = {
   voxels: THREE.Vector3[];
@@ -45,7 +43,10 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
     aoMap: aoMap,
     normalMap: normalMap,
     specularColorMap: metalnessMap,
-    roughnessMap: glossMap
+    roughnessMap: glossMap,
+    reflectivity: 0.5,
+    roughness: 0.8,
+    metalness: 0.3
   }), [aoMap, colMap, normalMap, metalnessMap, glossMap]);
   const ref = useRef<THREE.InstancedMesh>(null);
   const { raycaster, mouse, camera } = useThree();
@@ -128,12 +129,18 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
   }, [voxels, camera, mouse, raycaster, removeMode, addVoxel, removeVoxel]);
 
   return (
-    <>
+    <group rotation={[Math.PI * 3 / 2, 0, 0]}>
       {tmpPos && <mesh ref={tmpBox} position={tmpPos}>
         <boxGeometry args={[voxelSize * 0.98, voxelSize * 0.98, voxelSize * 0.98]} />
       </mesh>}
-      <instancedMesh ref={ref} args={[boxGeometry, material, voxels.length]} onPointerMove={onMove} onPointerLeave={onOut} onClick={onClick} />
-    </>
+      <instancedMesh
+        ref={ref}
+        args={[boxGeometry, material, voxels.length]}
+        onPointerMove={onMove}
+        onPointerLeave={onOut}
+        onClick={onClick}
+      />
+    </group>
   );
 };
 
@@ -142,13 +149,53 @@ type MeshProps = {
 }
 
 const MeshView: React.FC<MeshProps> = ({ mesh }) => {
-  if (!mesh)
-    return null;
+  // const data = new THREE.Mesh(mesh, Material);
+  const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
+  // Apply these materials to the subsequent OBJ loader
+  const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
+    if (model) {
+      model.setMaterials(materials);
+      
+    }
+    return model;
+  });
 
-  const data = new THREE.Mesh(mesh, Material);
+  // if (!mesh)
+  //   return null;
   
   return (
-    <primitive object={data} />
+    // <mesh
+    //   rotation={[Math.PI * 3 / 2, 0, 0]}
+    //   geometry={mesh}
+    //   material={Material}
+    // />
+    <group>
+      <mesh
+        castShadow
+        receiveShadow
+        rotation={[Math.PI * 3 / 2, 0, 0]}
+        geometry={obj.children[0].geometry}
+      >
+        <meshPhysicalMaterial
+          attach={'material'}
+          map={obj.children[0].material.map}
+          roughnessMap={obj.children[0].material.roughnessMap}
+          // normalMap={obj.children[0].material.normalMap}
+          metalnessMap={obj.children[0].material.metalnessMap}
+          roughness={0}
+          metalness={0.5}
+          reflectivity={0.7}
+        />
+      </mesh>
+      <Plane
+        receiveShadow
+        rotation={[Math.PI * 3 / 2, 0, 0]}
+        position={[0, -0.6, 0]}
+        args={[100, 100]}
+      >
+        <meshStandardMaterial attach="material" color="grey" />
+      </Plane>
+    </group>
   );
 }
 
@@ -243,6 +290,7 @@ const Scene: React.FC = () => {
       <ToolInfo />
       <div className="w-full h-full">
         <Canvas
+          shadows
           dpr={[1, 1]}
           frameloop="demand"
           gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance' }}
@@ -250,9 +298,17 @@ const Scene: React.FC = () => {
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
           <PerspectiveCamera makeDefault position={[0, 3, 3]} />
-          <ambientLight intensity={0.5} />
-          <pointLight intensity={0.8} position={[0, 0, 3]} />
-          <directionalLight position={[1, 1, 1]} intensity={1} />
+          <ambientLight intensity={1} />
+          <directionalLight
+            rotation={[Math.PI * 3 / 2, 0, 0]}
+            castShadow
+            position={[10, 10, 5]}
+            intensity={1.5}
+            shadow-mapSize-width={1024}
+            shadow-mapSize-height={1024}
+            shadow-camera-near={0.5}
+            shadow-camera-far={500}
+          />
           <Suspense fallback={null}>
             <Views />
           </Suspense>

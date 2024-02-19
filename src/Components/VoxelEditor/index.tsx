@@ -16,7 +16,8 @@ import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useToast } from "@chakra-ui/react";
-import { voxelCreated, updateVoxel } from "utils/api";
+// import { voxelCreated, updateVoxel } from "utils/api";
+import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
@@ -238,7 +239,7 @@ const Views: React.FC = () => {
             const current = projects.filter(project => project.id === projectId)[0];
             const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
             if (current.voxelData.length === 0) {
-                const res = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
+                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
                 updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl });
             } else {
                 const res = await updateVoxel(projectId, voxelData, iconUrl);

@@ -8,7 +8,8 @@ import { Box, Flex, Text, Stack, Button, Input } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
 import { useBasicStore, useThreeStore } from "@/store";
-import { changeProjectName } from "utils/api";
+// import { changeProjectName } from "utils/api";
+import { changeProjectName } from "@/Firebase/dbactions";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useAuthContext } from "@/contexts/authContext";
 
@@ -99,7 +100,7 @@ const FileNamgeChanger = () => {
     const handleProjectName = async () => {
         if (editing) {
             setLoading(true);
-            const res = await changeProjectName(projectId, name);
+            const res: any = await changeProjectName(projectId, name);
             setProjectName(res.name);
             updateProject(projectId, { name: res.name });
             setLoading(false);

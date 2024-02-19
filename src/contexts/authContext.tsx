@@ -3,7 +3,8 @@
 import React from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/Firebase/config";
-import { getUserInfo } from "utils/api";
+// import { getUserInfo } from "utils/api";
+import { getUserInfo } from "@/Firebase/dbactions";
 
 type UserInfo = {
   permission: string;
@@ -35,7 +36,7 @@ export const AuthContextProvider = (props: React.PropsWithChildren) => {
 
   React.useEffect(() => {
     const fetchUserInfo = async (userId: string) => {
-      const data = await getUserInfo(userId);
+      const data: any = await getUserInfo(userId);
       setUserInfo(data);
     }
     

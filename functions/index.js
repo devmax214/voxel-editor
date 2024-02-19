@@ -69,7 +69,7 @@ exports.getUserInfo = functions.https.onRequest(async (req, res) => {
   })
 });
 
-exports.getProjectsByUid = functions.https.onRequest(async (req, res) => {
+exports.getProjectsByUid = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'GET'){
       try {
@@ -141,7 +141,7 @@ exports.creditExist = functions.https.onRequest(async (req,res) => {
   })
 })
 
-exports.voxelCreated = functions.https.onRequest(async (req, res) => {
+exports.voxelCreated = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'POST'){
       try {
@@ -217,7 +217,7 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
   })
 })
 
-exports.updateVoxel = functions.https.onRequest(async (req, res) => {
+exports.updateVoxel = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
       if(req.method === 'POST'){
       try {

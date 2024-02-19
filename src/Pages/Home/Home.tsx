@@ -9,7 +9,8 @@ import TemplateButton from '@/Components/Elements/Buttons/TemplateButton';
 import { Box } from '@ui/Box/Box';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useAuthContext } from '@/contexts/authContext';
-import { createProject } from 'utils/api';
+// import { createProject } from 'utils/api';
+import { createProject } from '@/Firebase/dbactions';
 import { useBasicStore } from '@/store';
 
 const Home = () => {
@@ -24,7 +25,7 @@ const Home = () => {
   const handleCreateNew = async () => {
     if (user) {
       setLoading(true);
-      const res = await createProject(user.uid);
+      const res: any = await createProject(user.uid);
       addProject({
         id: res.projectId,
         name: '',

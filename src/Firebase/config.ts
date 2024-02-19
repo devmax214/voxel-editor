@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from 'firebase/auth';
 
 // Your web app's Firebase configuration
@@ -18,3 +18,4 @@ if (!getApps().length) {
 }
 
 export const auth = getAuth();
+export const app = getApp();

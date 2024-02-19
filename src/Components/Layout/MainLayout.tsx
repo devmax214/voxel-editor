@@ -11,7 +11,8 @@ import { Loading } from "@ui/Spinner";
 import theme from '@/theme'
 import MainHeader from '../Elements/Header/MainHeader'
 import { useProjectContext } from '@/contexts/projectContext';
-import { getProjectsByUid } from 'utils/api';
+// import { getProjectsByUid } from 'utils/api';
+import { getProjectsByUid } from '@/Firebase/dbactions';
 
 export const MainLayout: FC<PropsWithChildren> = ({ children }) => {
   const { user } = useAuthContext();
@@ -23,13 +24,15 @@ export const MainLayout: FC<PropsWithChildren> = ({ children }) => {
     const fetchProjects = async (userId: string) => {
       try {
         const res = await getProjectsByUid(userId);
-        const projects = res.projects.map((project: any) => {
-          return {
-            ...project.data,
-            id: project.id
-          }
-        });
-        setProjects(projects);
+        // const res = await getProjectsByUid(userId);
+        // const projects = res.projects.map((project: any) => {
+        //   return {
+        //     ...project.data,
+        //     id: project.id
+        //   }
+        // });
+        // setProjects(projects);
+        setProjects(res);
       } catch (error) {
         console.log(`Project fetching error: ${error}`);
       }

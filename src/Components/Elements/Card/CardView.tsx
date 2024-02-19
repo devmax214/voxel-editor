@@ -11,7 +11,8 @@ import {
 import React from 'react';
 import Link from 'next/link';
 import { Project } from 'utils/types';
-import { removeProject, duplicateProject } from 'utils/api';
+// import { removeProject, duplicateProject } from 'utils/api';
+import { removeProject, duplicateProject } from '@/Firebase/dbactions';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useBasicStore } from '@/store';
 
@@ -29,7 +30,7 @@ const CardView = ({
 
   const handleDuplicate = async () => {
     setLoading(true);
-    const res = await duplicateProject(id);
+    const res: any = await duplicateProject(id);
     addProject({ ...project, id: res.projectId });
     setLoading(false);
   }

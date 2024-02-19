@@ -183,11 +183,11 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
           normalMap={objMesh.material.normalMap}
           // roughnessMap={objMesh.material.roughnessMap}
           // metalnessMap={objMesh.material.metalnessMap}
-          roughness={1}
+          roughness={0.5}
           metalness={0.5}
-          reflectivity={0.5}
-          clearcoat={0.1}
-          clearcoatRoughness={0.1}
+          reflectivity={1}
+          clearcoat={1}
+          clearcoatRoughness={0.5}
           transmission={0}
         />
       </mesh>
@@ -320,8 +320,8 @@ const Scene: React.FC = () => {
           <directionalLight
             rotation={[Math.PI * 3 / 2, 0, 0]}
             castShadow
-            position={[10, 10, 5]}
-            intensity={1.5}
+            position={[10, 20, 10]}
+            intensity={2}
             shadow-mapSize-width={1024}
             shadow-mapSize-height={1024}
             shadow-camera-near={0.5}

@@ -24,11 +24,9 @@ export const MainLayout: FC<PropsWithChildren> = ({ children }) => {
       try {
         const res = await getProjectsByUid(userId);
         const projects = res.projects.map((project: any) => {
-          const voxelData = project.data.voxelData === "" ? [] : project.data.voxelData;
           return {
             ...project.data,
-            id: project.id,
-            voxelData: voxelData
+            id: project.id
           }
         });
         setProjects(projects);

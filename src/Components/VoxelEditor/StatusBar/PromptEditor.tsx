@@ -5,6 +5,8 @@ import useMeshReqStatus from '@/hooks/useMeshReqStatus';
 import { getStatusById, requestMesh } from 'utils/apiCall';
 import { Input } from '@chakra-ui/input';
 import { Button } from '@chakra-ui/react';
+import { changeProjectName } from 'utils/api';
+import { useProjectContext } from "@/contexts/projectContext";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -12,11 +14,12 @@ const PromptEditor = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const [reqId, setReqId] = useState<string| null>(null);
-  const { setVoxels, setMesh } = useThreeStore();
+  const { setVoxels, setMesh, setProjectName } = useThreeStore();
   const [propmt, setPrompt] = useState<string>('');
   const [meshData, setMeshData] = useState(null);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
   const { setMeshReqStatus, setLoading } = useBasicStore();
+  const { updateProject } = useProjectContext();
 
   const [voxelData, imMesh] = useMeshReqStatus(meshData, voxelSize);
 
@@ -31,6 +34,16 @@ const PromptEditor = () => {
     setVoxels(voxelData);
     setMesh(imMesh);
   }, [voxelData, setVoxels, imMesh, setMesh]);
+
+  const updateProjectName = async () => {
+    try {
+      const res = await changeProjectName(projectId, propmt);
+      setProjectName(res.name);
+      updateProject(projectId, { name: res.name });
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
   useEffect(() => {    
     if (!reqId) return;
@@ -66,6 +79,7 @@ const PromptEditor = () => {
     if (res) {
       window.localStorage.setItem(projectId, res.id);
       setReqId(res.id);
+      await updateProjectName();
     }
   }
 

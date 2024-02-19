@@ -9,7 +9,6 @@
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const axios = require('axios');
 const cors = require('cors')({ origin: true });
 
 admin.initializeApp();
@@ -104,7 +103,7 @@ exports.createProject = functions.https.onRequest(async (req, res) => {
           uid: uid,
           status: "Blank",
           progress: 0,
-          voxelData: "",
+          voxelData: [],
           imageLink: "",
           meshLink: ""
         }
@@ -156,22 +155,13 @@ exports.voxelCreated = functions.https.onRequest(async (req, res) => {
         });
 
         await projectRef.update({
+          'imageLink': file,
           'status': "Editing",
           'voxelData': voxelData
         });
 
         const projectData = (await projectRef.get()).data();
-
-        if(file){
-          const fileRef = storage.file(`projects/${projectRef.id}/${file.name}`);
-          await fileRef.save(file.data);
-          const publicUrl = `https://storage.googleapis.com/${storage.name}/${fileRef.name}`;
-          await projectRef.update({
-            'imageLink': publicUrl,
-          });
-        }
         res.status(200).json({ message: "Successfully saved Voxel Data", project: projectData });
-
       } catch (error) {
         console.error('Error processing voxel data:', error);
         res.status(500).json({ error: 'Error processing voxel data' });
@@ -327,6 +317,7 @@ exports.removeProject = functions.https.onRequest(async (req, res) => {
       try {
         const { projectId } = req.query;
         await db.collection("projects").doc(projectId).delete();
+        await storage.deleteFiles
         res.status(200).json({ message: 'Project removed successfully' });
       } catch (error) {
         console.error('Error removing project:', error);
@@ -336,6 +327,14 @@ exports.removeProject = functions.https.onRequest(async (req, res) => {
       res.status(405).send('Method Not Allowed');
     }
   })
+});
+
+exports.deleteProjectIcon = functions.firestore.document('projects/{projectId}').onDelete(async (snap, context) => {
+  const projectId = context.params.projectId;
+
+  const storageRef = admin.storage().bucket();
+  const fileRef = storageRef.file(`${projectId}/icon.png`);
+  await fileRef.delete();
 });
 
 // exports.create3DProject = functions.https.onRequest(async (req, res) => {

@@ -55,10 +55,10 @@ export async function creditExist(uid: string) {
   }
 }
 
-export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: Voxel[]) {
+export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: Voxel[], file?: string) {
   const requestUrl = encodeURI(BASE_URL + '/voxelCreated');
   try {
-    const axiosResponse = await axios.post(requestUrl, { uid, projectId, usedPrice, voxelData });
+    const axiosResponse = await axios.post(requestUrl, { uid, projectId, usedPrice, voxelData, file });
     return axiosResponse.data;
   } catch (error) {
     console.error(`${requestUrl} error: `, error)

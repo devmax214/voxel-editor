@@ -17,6 +17,7 @@ import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useToast } from "@chakra-ui/react";
 import { voxelCreated, updateVoxel } from "utils/api";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -180,11 +181,14 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
           attach={'material'}
           map={obj.children[0].material.map}
           roughnessMap={obj.children[0].material.roughnessMap}
-          // normalMap={obj.children[0].material.normalMap}
-          metalnessMap={obj.children[0].material.metalnessMap}
-          roughness={0}
-          metalness={0.5}
-          reflectivity={0.7}
+          normalMap={obj.children[0].material.normalMap}
+          metalnessMap={obj.children[0].material.metalnessMap}          
+          roughness={0.6}
+          metalness={0.8}
+          reflectivity={0.5}
+          clearcoat={0.1}
+          clearcoatRoughness={0.1}
+          transmission={0}
         />
       </mesh>
       <Plane
@@ -222,38 +226,38 @@ const Views: React.FC = () => {
   const save = useCallback(async (e: KeyboardEvent) => {
     if (e.code === "Backslash" && user) {
       e.preventDefault();
-      gl.domElement.toBlob((blob) => {
+      gl.domElement.toBlob(async (blob) => {
         if (blob) {
-          const img = new Image();
-          img.src = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = img.src;
-          link.download = 'screenshot.png';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          try {
+            setLoading(true);
+            const storage = getStorage();
+            const storageRef = ref(storage, `${projectId}/icon.png`);
+            const snapshot = await uploadBytes(storageRef, blob);
+            const iconUrl = await getDownloadURL(storageRef);
+  
+            const current = projects.filter(project => project.id === projectId)[0];
+            const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+            if (current.voxelData.length === 0) {
+                const res = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
+                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl });
+            } else {
+                const res = await updateVoxel(projectId, voxelData);
+                updateProject(projectId, { voxelData: voxelData });
+            }
+            toast({
+                title: 'Success',
+                description: "You saved voxel data successfully.",
+                status: 'success',
+                position: 'top',
+                duration: 3000,
+                isClosable: true,
+            });
+            setLoading(false);
+          } catch (error) {
+            setLoading(false);
+          }
         }
       }, 'image/png');
-
-      setLoading(true);
-      const current = projects.filter(project => project.id === projectId)[0];
-      const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
-      if (current.voxelData.length === 0) {
-          const res = await voxelCreated(user.uid, projectId, 10, voxelData);
-          updateProject(projectId, { status: res.project.status, voxelData: voxelData });
-      } else {
-          const res = await updateVoxel(projectId, voxelData);
-          updateProject(projectId, { voxelData: voxelData });
-      }
-      setLoading(false);
-      toast({
-          title: 'Success',
-          description: "You saved voxel data successfully.",
-          status: 'success',
-          position: 'top',
-          duration: 3000,
-          isClosable: true,
-      });
     }
   },
   [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]

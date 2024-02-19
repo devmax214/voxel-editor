@@ -161,10 +161,12 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
     return model;
   });
 
+  const objMesh = obj.children[0] instanceof THREE.Mesh ? (obj.children[0] as THREE.Mesh) : null;
+
   // if (!mesh)
   //   return null;
   
-  return (
+  if (objMesh && objMesh.geometry && objMesh.material instanceof THREE.MeshPhysicalMaterial) return (
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
     //   geometry={mesh}
@@ -175,14 +177,14 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         castShadow
         receiveShadow
         rotation={[Math.PI * 3 / 2, 0, 0]}
-        geometry={obj.children[0].geometry}
+        geometry={objMesh.geometry}
       >
         <meshPhysicalMaterial
           attach={'material'}
-          map={obj.children[0].material.map}
-          roughnessMap={obj.children[0].material.roughnessMap}
-          normalMap={obj.children[0].material.normalMap}
-          metalnessMap={obj.children[0].material.metalnessMap}          
+          map={objMesh.material.map}
+          roughnessMap={objMesh.material.roughnessMap}
+          normalMap={objMesh.material.normalMap}
+          metalnessMap={objMesh.material.metalnessMap}          
           roughness={0.6}
           metalness={0.8}
           reflectivity={0.5}
@@ -200,7 +202,8 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         <meshStandardMaterial attach="material" color="grey" />
       </Plane>
     </group>
-  );
+  )
+  else return null;
 }
 
 const SceneBackground: React.FC = () => {

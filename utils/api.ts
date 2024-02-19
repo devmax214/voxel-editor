@@ -55,7 +55,7 @@ export async function creditExist(uid: string) {
   }
 }
 
-export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: Voxel[], file?: string) {
+export async function voxelCreated(uid: string, projectId: string, usedPrice: number, voxelData: Voxel[], file: string) {
   const requestUrl = encodeURI(BASE_URL + '/voxelCreated');
   try {
     const axiosResponse = await axios.post(requestUrl, { uid, projectId, usedPrice, voxelData, file });
@@ -79,10 +79,10 @@ export async function startStage2(projectId: string) {
   }
 }
 
-export async function updateVoxel(projectId: string, voxelData: Voxel[]) {
+export async function updateVoxel(projectId: string, voxelData: Voxel[], file: string) {
   const requestUrl = encodeURI(BASE_URL + '/updateVoxel');
   try {
-    const axiosResponse = await axios.post(requestUrl, { projectId, voxelData });
+    const axiosResponse = await axios.post(requestUrl, { projectId, voxelData, file });
     return axiosResponse.data;
   } catch (error) {
     console.error(`${requestUrl} error: `, error)

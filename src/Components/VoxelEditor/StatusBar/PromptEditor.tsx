@@ -14,7 +14,7 @@ const PromptEditor = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const [reqId, setReqId] = useState<string| null>(null);
-  const { setVoxels, setMesh, setProjectName } = useThreeStore();
+  const { setVoxels, setMesh, projectName, setProjectName } = useThreeStore();
   const [propmt, setPrompt] = useState<string>('');
   const [meshData, setMeshData] = useState(null);
   const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
@@ -79,7 +79,8 @@ const PromptEditor = () => {
     if (res) {
       window.localStorage.setItem(projectId, res.id);
       setReqId(res.id);
-      await updateProjectName();
+      if (!projectName)
+        await updateProjectName();
     }
   }
 

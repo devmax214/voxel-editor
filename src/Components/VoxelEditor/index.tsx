@@ -154,19 +154,16 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
   // Apply these materials to the subsequent OBJ loader
   const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
-    if (model) {
-      model.setMaterials(materials);
-      
-    }
+    model.setMaterials(materials);
     return model;
   });
-
+  
   const objMesh = obj.children[0] instanceof THREE.Mesh ? (obj.children[0] as THREE.Mesh) : null;
 
   // if (!mesh)
   //   return null;
   
-  if (objMesh && objMesh.geometry && objMesh.material instanceof THREE.MeshPhysicalMaterial) return (
+  if (objMesh && objMesh.geometry && objMesh.material instanceof THREE.MeshPhongMaterial) return (
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
     //   geometry={mesh}
@@ -182,11 +179,11 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         <meshPhysicalMaterial
           attach={'material'}
           map={objMesh.material.map}
-          roughnessMap={objMesh.material.roughnessMap}
           normalMap={objMesh.material.normalMap}
-          metalnessMap={objMesh.material.metalnessMap}          
-          roughness={0.6}
-          metalness={0.8}
+          // roughnessMap={objMesh.material.roughnessMap}
+          // metalnessMap={objMesh.material.metalnessMap}
+          roughness={1}
+          metalness={0.5}
           reflectivity={0.5}
           clearcoat={0.1}
           clearcoatRoughness={0.1}
@@ -237,15 +234,15 @@ const Views: React.FC = () => {
             const storageRef = ref(storage, `${projectId}/icon.png`);
             const snapshot = await uploadBytes(storageRef, blob);
             const iconUrl = await getDownloadURL(storageRef);
-  
+            
             const current = projects.filter(project => project.id === projectId)[0];
             const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
             if (current.voxelData.length === 0) {
                 const res = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
                 updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl });
             } else {
-                const res = await updateVoxel(projectId, voxelData);
-                updateProject(projectId, { voxelData: voxelData });
+                const res = await updateVoxel(projectId, voxelData, iconUrl);
+                updateProject(projectId, { voxelData: voxelData, imageLink: iconUrl });
             }
             toast({
                 title: 'Success',
@@ -266,13 +263,26 @@ const Views: React.FC = () => {
   [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
   );
 
+  const autoSave = useCallback(async () => {
+    const current = projects.filter(project => project.id === projectId)[0];
+    const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+    try {
+      const res = await updateVoxel(projectId, voxelData, current.imageLink);
+      updateProject(projectId, { voxelData: voxelData });
+    } catch (error) {
+      console.log(error);
+    }
+  }, [projectId, projects, voxels, updateProject]);
+
   useEffect(() => {
     document.addEventListener('keyup', save);
+    const timer = setInterval(autoSave, 10 * 60 * 1000);
 
     return () => {
       document.removeEventListener('keyup', save);
+      clearInterval(timer);
     }
-  }, [save]);
+  }, [save, autoSave]);
 
   return (
     <>

@@ -47,7 +47,7 @@ const CardView = ({
       <div className="flex justify-between items-center">
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
-            <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={70} width={70} />
+            <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={70} width={70} fetchPriority='high' />
           </Link>
           {progress ? 
             <Progress colorScheme='blue' w={'110px'} bg={'gray.300'} height='20px' value={progress} hasStripe mx={2}>

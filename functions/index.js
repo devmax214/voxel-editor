@@ -221,10 +221,11 @@ exports.updateVoxel = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
       if(req.method === 'POST'){
       try {
-        const {projectId, voxelData} = req.body;
+        const {projectId, voxelData, file} = req.body;
         const projectRef = db.collection("projects").doc(projectId);
         
         await projectRef.update({
+          'imageLink': file,
           'status': "Editing",
           'voxelData': voxelData
         });

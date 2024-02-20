@@ -2,9 +2,8 @@
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OBJLoader } from 'three-stdlib';
-import { MTLLoader } from 'three-stdlib';
-import { OrbitControls, PerspectiveCamera, Environment, Plane } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF } from "@react-three/drei";
+import { mergeVertices } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
 
@@ -151,20 +150,17 @@ type MeshProps = {
 }
 
 const MeshView: React.FC<MeshProps> = ({ mesh }) => {
-  // const data = new THREE.Mesh(mesh, Material);
-  const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
-  // Apply these materials to the subsequent OBJ loader
-  const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
-    model.setMaterials(materials);
-    return model;
-  });
-  
-  const objMesh = obj.children[0] instanceof THREE.Mesh ? (obj.children[0] as THREE.Mesh) : null;
+  const { nodes, materials } = useGLTF("/models/motor.glb");
 
   // if (!mesh)
   //   return null;
+  const material = materials.default;
+  let geometry = (nodes.model as THREE.Mesh).geometry;
+  delete geometry.attributes.normal;
+  geometry = mergeVertices(geometry);
+  geometry.computeVertexNormals();
   
-  if (objMesh && objMesh.geometry && objMesh.material instanceof THREE.MeshPhongMaterial) return (
+  return (
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
     //   geometry={mesh}
@@ -173,24 +169,9 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
     <group>
       <mesh
         castShadow
-        receiveShadow
-        rotation={[Math.PI * 3 / 2, 0, 0]}
-        geometry={objMesh.geometry}
-      >
-        <meshPhysicalMaterial
-          attach={'material'}
-          map={objMesh.material.map}
-          normalMap={objMesh.material.normalMap}
-          // roughnessMap={objMesh.material.roughnessMap}
-          // metalnessMap={objMesh.material.metalnessMap}
-          roughness={0.5}
-          metalness={0.5}
-          reflectivity={1}
-          clearcoat={1}
-          clearcoatRoughness={0.5}
-          transmission={0}
-        />
-      </mesh>
+        geometry={geometry}
+        material={material}
+      />
       <Plane
         receiveShadow
         rotation={[Math.PI * 3 / 2, 0, 0]}
@@ -201,7 +182,6 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
       </Plane>
     </group>
   )
-  else return null;
 }
 
 const SceneBackground: React.FC = () => {
@@ -313,6 +293,7 @@ const Scene: React.FC = () => {
           frameloop="demand"
           gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance' }}
         >
+          {/* <Axes /> */}
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
           <PerspectiveCamera makeDefault position={[0, 3, 3]} />

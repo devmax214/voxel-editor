@@ -10,11 +10,14 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require('cors')({ origin: true });
+const { PubSub } = require('@google-cloud/pubsub');
 
 admin.initializeApp();
 // admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
 const storage = admin.storage().bucket();
+const pubsub = new PubSub();
+const topicName = 'SecondAIReq';
 
 exports.createUserFile = functions.auth.user().onCreate(async (user) => {
   const uid = user.uid;
@@ -60,7 +63,7 @@ exports.getUserInfo = functions.https.onRequest(async (req, res) => {
         }
         res.status(200).json(userInfo);
       } catch (error) {
-        console.error('Error finding User Info:', error);
+        console.log('Error finding User Info:', error);
         res.status(500).json({ error: 'Error finding User Info' });
       }
     } else {
@@ -69,7 +72,7 @@ exports.getUserInfo = functions.https.onRequest(async (req, res) => {
   })
 });
 
-exports.getProjectsByUid = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
+exports.getProjectsByUid = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'GET'){
       try {
@@ -84,7 +87,7 @@ exports.getProjectsByUid = functions.runWith({ minInstances: 10 }).https.onReque
   
         res.status(200).json({ projects: projects });
       } catch (error) {
-        console.error('Error finding projects:', error);
+        console.log('Error finding projects:', error);
         res.status(500).json({ error: 'Error finding projects' });
       }
     } else {
@@ -111,7 +114,7 @@ exports.createProject = functions.https.onRequest(async (req, res) => {
         const projectId = projectRef.id;
         res.status(200).json({projectId: projectId});
       } catch (error) {
-        console.error('Error creating project:', error);
+        console.log('Error creating project:', error);
         res.status(500).send('Error creating project');
       }
     } else {
@@ -132,7 +135,7 @@ exports.creditExist = functions.https.onRequest(async (req,res) => {
         else
           res.status(400).json("No Credit")
       } catch (error) {
-        console.error('Error finding user:', error);
+        console.log('Error finding user:', error);
         res.status(500).json({ error: 'Error finding user' });
       }
     } else {
@@ -141,7 +144,7 @@ exports.creditExist = functions.https.onRequest(async (req,res) => {
   })
 })
 
-exports.voxelCreated = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
+exports.voxelCreated = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'POST'){
       try {
@@ -163,7 +166,7 @@ exports.voxelCreated = functions.runWith({ minInstances: 10 }).https.onRequest(a
         const projectData = (await projectRef.get()).data();
         res.status(200).json({ message: "Successfully saved Voxel Data", project: projectData });
       } catch (error) {
-        console.error('Error processing voxel data:', error);
+        console.log('Error processing voxel data:', error);
         res.status(500).json({ error: 'Error processing voxel data' });
       }
     } else {
@@ -172,54 +175,86 @@ exports.voxelCreated = functions.runWith({ minInstances: 10 }).https.onRequest(a
   })
 })
 
+const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/1qao7hbqaekjpm";
+const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.startStage2 = functions.https.onRequest(async (req,res) => {
   cors(req, res, async ()=>{
-    if(req.method === 'GET'){
+    if (req.method === 'POST') {
+      const { projectId, prompt } = req.body;
+      
       try {
-        const projectId = req.query.projectId;
-        const projectRef = db.collection('projects').doc(projectId);
-        const projectData = (await projectRef.get()).data()
-        
-        const uid = projectData.uid;
-        const userRef = db.collection('users').doc(uid);
-        const userData = (await userRef.get()).data();
-
-        if(projectData.status !== "Blank"){
+        const projectRef = db.collection("projects").doc(projectId);
+        const projectData = (await projectRef.get()).data();
+        if(projectData.status === "Blank"){
           return res.status(400).json("You need to create voxel firstly")
-        }else if(projectData.status !== "Generating"){
+        }else if(projectData.status === "Generating"){
           return res.status(400).json("It is already generating stage.")
-        }else if(projectData.status !== "Completed"){
+        }else if(projectData.status === "Completed"){
           return res.status(400).json("Project already completed")
         }
 
-        if(userData.billing.compute_unit >= 100){
-          await userRef.update({
-            'billing.hold': 100,
-            'billing.compute_unit': userData.billing.compute_unit - 100
-          });
+        const messageData = {
+          projectId: projectId,
+          prompt: prompt
+        };
 
-          await projectRef.update({
-            'status': "Generating",
-          });
-          
-          res.status(200).json("Started");
-        }
-        else
-          res.status(400).json("Insufficient credit")
+        const dataBuffer = Buffer.from(JSON.stringify(messageData));
+
+        pubsub.topic(topicName).publish(dataBuffer);
+
+        res.status(200).json("Requested");
       } catch (error) {
-        console.error('Error finding user:', error);
-        res.status(500).json({ error: error });
+        console.log(error);
+        res.status(500).json({ error: 'Error Second Stage Project' });
       }
-    } else {
-      res.status(405).send('Method Not Allowed');
     }
+    // if(req.method === 'GET'){
+    //   try {
+    //     const projectId = req.query.projectId;
+    //     const projectRef = db.collection('projects').doc(projectId);
+    //     const projectData = (await projectRef.get()).data()
+        
+    //     const uid = projectData.uid;
+    //     const userRef = db.collection('users').doc(uid);
+    //     const userData = (await userRef.get()).data();
+
+    //     if(projectData.status !== "Blank"){
+    //       return res.status(400).json("You need to create voxel firstly")
+    //     }else if(projectData.status !== "Generating"){
+    //       return res.status(400).json("It is already generating stage.")
+    //     }else if(projectData.status !== "Completed"){
+    //       return res.status(400).json("Project already completed")
+    //     }
+
+    //     if(userData.billing.compute_unit >= 100){
+    //       await userRef.update({
+    //         'billing.hold': 100,
+    //         'billing.compute_unit': userData.billing.compute_unit - 100
+    //       });
+
+    //       await projectRef.update({
+    //         'status': "Generating",
+    //       });
+          
+    //       res.status(200).json("Started");
+    //     }
+    //     else
+    //       res.status(400).json("Insufficient credit")
+    //   } catch (error) {
+    //     console.log('Error finding user:', error);
+    //     res.status(500).json({ error: error });
+    //   }
+    // } else {
+    //   res.status(405).send('Method Not Allowed');
+    // }
   })
 })
 
-exports.updateVoxel = functions.runWith({ minInstances: 10 }).https.onRequest(async (req, res) => {
+exports.updateVoxel = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
-      if(req.method === 'POST'){
+    if(req.method === 'POST'){
       try {
         const {projectId, voxelData, file} = req.body;
         const projectRef = db.collection("projects").doc(projectId);
@@ -235,7 +270,7 @@ exports.updateVoxel = functions.runWith({ minInstances: 10 }).https.onRequest(as
         res.status(200).json({ message: "Successfully updated Voxel Data" });
 
       } catch (error) {
-        console.error('Error updating voxel data:', error);
+        console.log('Error updating voxel data:', error);
         res.status(500).json({ error: 'Error updating voxel data' });
       }
     } else {
@@ -246,7 +281,7 @@ exports.updateVoxel = functions.runWith({ minInstances: 10 }).https.onRequest(as
 
 exports.checkStatus = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
-      if(req.method === 'GET'){
+    if(req.method === 'GET'){
       try {
         const {projectId} = req.query;
         const projectRef = db.collection("projects").doc(projectId);
@@ -256,7 +291,7 @@ exports.checkStatus = functions.https.onRequest(async (req, res) => {
         res.status(200).json({ status: projectData.status, progress: projectData.progress });
 
       } catch (error) {
-        console.error('Error checking Status and progress:', error);
+        console.log('Error checking Status and progress:', error);
         res.status(500).json({ error: 'Error checking Status and progress' });
       }
     } else {
@@ -267,7 +302,7 @@ exports.checkStatus = functions.https.onRequest(async (req, res) => {
 
 exports.changeProjectName = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
-      if(req.method === 'GET'){
+    if(req.method === 'GET'){
       try {
         const {projectId, newProjectName} = req.query;
         const projectRef = db.collection("projects").doc(projectId);
@@ -281,7 +316,7 @@ exports.changeProjectName = functions.https.onRequest(async (req, res) => {
         res.status(200).json({ name: projectData.name });
 
       } catch (error) {
-        console.error('Error changing Project Name:', error);
+        console.log('Error changing Project Name:', error);
         res.status(500).json({ error: 'Error changing Project Name' });
       }
     } else {
@@ -292,7 +327,7 @@ exports.changeProjectName = functions.https.onRequest(async (req, res) => {
 
 exports.duplicateProject = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
-      if(req.method === 'GET'){
+    if(req.method === 'GET'){
       try {
         const {projectId} = req.query;
         const projectRef = db.collection("projects").doc(projectId);
@@ -303,7 +338,7 @@ exports.duplicateProject = functions.https.onRequest(async (req, res) => {
         res.status(200).json({projectId: newProjectId});
 
       } catch (error) {
-        console.error('Error duplicating project:', error);
+        console.log('Error duplicating project:', error);
         res.status(500).json({ error: 'Error duplicating project' });
       }
     } else {
@@ -314,14 +349,14 @@ exports.duplicateProject = functions.https.onRequest(async (req, res) => {
 
 exports.removeProject = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
-      if (req.method === 'GET') {
+    if (req.method === 'GET') {
       try {
         const { projectId } = req.query;
         await db.collection("projects").doc(projectId).delete();
         await storage.deleteFiles
         res.status(200).json({ message: 'Project removed successfully' });
       } catch (error) {
-        console.error('Error removing project:', error);
+        console.log('Error removing project:', error);
         res.status(500).json({ error: 'Error removing project' });
       }
     } else {
@@ -338,41 +373,56 @@ exports.deleteProjectIcon = functions.firestore.document('projects/{projectId}')
   await fileRef.delete();
 });
 
-// exports.create3DProject = functions.https.onRequest(async (req, res) => {
-//   try {
-//     // Verify user authentication
-//     const { uid } = req.headers;
-//     if (!uid) {
-//       return res.status(401).json({ error: 'Unauthorized' });
-//     }
+exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.topic(topicName).onPublish(async (message, context) => {
+  const messageData = JSON.parse(Buffer.from(message.data, 'base64').toString());
+  const projectId = messageData.projectId;
+  const projectPrompt = messageData.prompt;
+  try {
+    const projectRef = db.collection("projects").doc(projectId);
 
-//     // Access request data
-//     const { projectName, projectData } = req.body;
-//     const files = req.files;
+    await projectRef.update({
+      status: "Generating",
+    });
+  
+    const reqRes = await fetch(`${SECOND_AI_API_BASEURL}/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${API_KEY}`
+      },
+      body: JSON.stringify({
+        input: {
+          prompt: projectPrompt
+        }
+      })
+    });
 
-//     // Create project document
-//     const projectRef = await db.collection('projects').add({
-//       uid: uid,
-//       name: projectName,
-//       data: projectData,
-//       files: []
-//     });
+    let res = await reqRes.json();
+  
+    console.log('requested');
+  
+    while (res.status !== 'COMPLETED') {
+      console.log('checked', res.status);
+      await delay(10000);
+      const checkProject = await fetch(`${SECOND_AI_API_BASEURL}/status/${res.id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${API_KEY}`
+        }
+      });
 
-//     // Save files and update project document
-//     for (const file of files) {
-//       const fileRef = storage.file(`projects/${projectRef.id}/${file.name}`);
-//       await fileRef.save(file.data);
-
-//       const publicUrl = `https://storage.googleapis.com/${storage.name}/${fileRef.name}`;
-
-//       await projectRef.update({
-//         files: admin.firestore.FieldValue.arrayUnion(publicUrl)
-//       });
-//     }
-
-//     res.status(200).json({ message: '3D project created successfully' });
-//   } catch (error) {
-//     console.error('Error creating 3D project:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
+      res = await checkProject.json();
+    }
+  
+    console.log('completed');
+  
+    await projectRef.update({
+      status: "Completed",
+    });
+  } catch (error) {
+    console.log('Error processing AI Request:', error);
+  }
+});

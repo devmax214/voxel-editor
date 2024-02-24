@@ -10,7 +10,7 @@ const ViewModeSwitcher = () => {
 
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'viewMode',
-    defaultValue: viewMode,
+    value: viewMode,
     onChange: setViewMode,
   });
 

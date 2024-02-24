@@ -8,7 +8,7 @@ export type Project = {
   id: string;
   name: string;
   progress: number;
-  status: "Blank" | "Editing" | "Completed";
+  status: "Blank" | "Editing" | "Generating" | "Completed";
   uid: string;
   voxelData: Voxel[];
   meshLink: string;

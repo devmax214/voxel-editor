@@ -145,3 +145,17 @@ export const updateVoxel = async (projectId: string, voxelData: Voxel[], file: s
     return error;
   }
 }
+
+export const checkStatus = async (projectId: string) => {
+  try {
+    const projectRef = doc(db, 'projects', projectId);
+    const projectData = (await getDoc(projectRef)).data();
+    return {
+      status: projectData?.status,
+      progress: projectData?.progress
+    }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}

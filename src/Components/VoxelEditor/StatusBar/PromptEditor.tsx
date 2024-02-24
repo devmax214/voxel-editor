@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useBasicStore, useThreeStore } from '@/store';
 import useMeshReqStatus from '@/hooks/useMeshReqStatus';
 import { getStatusById, requestMesh } from 'utils/apiCall';
 import { Input } from '@chakra-ui/input';
-import { Button } from '@chakra-ui/react';
-import { changeProjectName } from 'utils/api';
+import { Button, Spinner } from '@chakra-ui/react';
+import { changeProjectName, startStage2 } from 'utils/api';
 import { useProjectContext } from "@/contexts/projectContext";
+import { checkStatus } from '@/Firebase/dbactions';
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -14,11 +15,11 @@ const PromptEditor = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const [reqId, setReqId] = useState<string| null>(null);
-  const { setVoxels, setMesh, projectName, setProjectName } = useThreeStore();
+  const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const { voxels, setVoxels, setMesh, projectName, setProjectName } = useThreeStore();
   const [propmt, setPrompt] = useState<string>('');
   const [meshData, setMeshData] = useState(null);
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-  const { setMeshReqStatus, setLoading } = useBasicStore();
+  const { setMeshReqStatus, setLoading, setViewMode } = useBasicStore();
   const { updateProject } = useProjectContext();
 
   const [voxelData, imMesh] = useMeshReqStatus(meshData, voxelSize);
@@ -27,6 +28,10 @@ const PromptEditor = () => {
     const savedId = window.localStorage.getItem(projectId);
     if (savedId) {
       setReqId(savedId);
+    }
+    const savedGenerating = window.sessionStorage.getItem(projectId);
+    if (savedGenerating) {
+      setIsGenerating(true);
     }
   }, [projectId]);
 
@@ -45,6 +50,8 @@ const PromptEditor = () => {
     }
   }
 
+  const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
+
   useEffect(() => {    
     if (!reqId) return;
 
@@ -54,7 +61,8 @@ const PromptEditor = () => {
         setMeshReqStatus(res.status);
         if (res.status === 'IN_QUEUE' || res.status === 'IN_PROGRESS') {
           setLoading(true);
-          setTimer(setTimeout(checkReq, 3000));
+          await delay(3000);
+          checkReq();
         }
         else if (res.status === 'COMPLETED') {
           setLoading(false);
@@ -66,13 +74,7 @@ const PromptEditor = () => {
     }
     
     checkReq();
-    
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    }
-  }, [projectId, reqId, setLoading, setMeshReqStatus]);
+  }, [projectId, reqId, setLoading, setMeshReqStatus, delay]);
 
   const handleGenerate = async () => {
     const res = await requestMesh(propmt);
@@ -84,10 +86,47 @@ const PromptEditor = () => {
     }
   }
 
+  useEffect(() => {
+    if (!isGenerating) return;
+
+    const checkReq = async () => {
+      const res = await checkStatus(projectId) as ({status: string, progress: number});
+      console.log(res);
+      if (res) {
+        if (res.status === 'Editing' || res.status === 'Generating') {
+          await delay(10000);
+          checkReq();
+        }
+        else if (res.status === 'Completed') {
+          setViewMode('mesh');
+          window.sessionStorage.removeItem(projectId);
+          setIsGenerating(false);
+        }
+      }
+    }
+
+    checkReq();
+  }, [projectId, isGenerating, delay, setViewMode]);
+
+  const handleGenerateModel = async () => {
+    startStage2(projectId, propmt);
+    window.sessionStorage.setItem(projectId, "true");
+    setIsGenerating(true);
+  }
+
   return (
-    <div className="flex gap-x-2 w-96">
+    <div className="flex gap-x-2">
       <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
-      <Button onClick={handleGenerate} isDisabled={propmt === ''}>Generate</Button>
+      <Button colorScheme='orange' onClick={handleGenerate} isDisabled={propmt === ''}>Generate<br />Voxel</Button>
+      <Button colorScheme='blue' onClick={handleGenerateModel} isDisabled={propmt === '' || voxels.length === 0 || isGenerating}>
+        {isGenerating ?
+          <div>
+            <Spinner />
+          </div>
+          :
+          <div>Generate<br />Model</div>
+        }
+      </Button>
     </div>
   );
 }

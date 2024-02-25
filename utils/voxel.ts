@@ -53,3 +53,42 @@ export function voxelizeMesh(geometry: THREE.BufferGeometry, gridSize: number) {
   return voxels;
 }
 
+function round(val: number) {
+  return parseFloat(Number(val).toFixed(10));
+}
+
+export function generatePointCloud(voxels: THREE.Vector3[], gridSize: number) {
+  let pointSet = new Set();
+
+  for (let i = 0; i < voxels.length; i++) {
+    const {x, y, z} = voxels[i];
+    // const x = parseFloat(Number(voxels[i].x).toFixed(10));
+    // const y = parseFloat(Number(voxels[i].y).toFixed(10));
+    // const z = parseFloat(Number(voxels[i].z).toFixed(10));
+
+    // add corners of each voxel
+    pointSet.add([x, y, z]);
+    pointSet.add([x, y + gridSize, z]);
+    pointSet.add([x, y, z + gridSize]);
+    pointSet.add([x, y + gridSize, z + gridSize]);
+    pointSet.add([x + gridSize, y, z]);
+    pointSet.add([x + gridSize, y + gridSize, z]);
+    pointSet.add([x + gridSize, y, z + gridSize]);
+    pointSet.add([x + gridSize, y + gridSize, z + gridSize]);
+    // pointSet.add([round(x), round(y), round(z)]);
+    // pointSet.add([round(x), round(y + gridSize), round(z)]);
+    // pointSet.add([round(x), round(y), round(z + gridSize)]);
+    // pointSet.add([round(x), round(y + gridSize), round(z + gridSize)]);
+    // pointSet.add([round(x + gridSize), round(y), round(z)]);
+    // pointSet.add([round(x + gridSize), round(y + gridSize), round(z)]);
+    // pointSet.add([round(x + gridSize), round(y), round(z + gridSize)]);
+    // pointSet.add([round(x + gridSize), round(y + gridSize), round(z + gridSize)]);
+    
+    // add center of each voxel
+    pointSet.add([x + gridSize / 2, y + gridSize / 2, z + gridSize / 2]);
+    // pointSet.add([round(x + gridSize / 2), round(y + gridSize / 2), round(z + gridSize / 2)]);
+  }
+
+  const pointCloud = Array.from(pointSet);
+  return pointCloud;
+}

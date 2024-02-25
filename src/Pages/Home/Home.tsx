@@ -12,6 +12,7 @@ import { useAuthContext } from '@/contexts/authContext';
 // import { createProject } from 'utils/api';
 import { createProject } from '@/Firebase/dbactions';
 import { useBasicStore } from '@/store';
+import { Project } from 'utils/types';
 
 const Home = () => {
   const { user } = useAuthContext();
@@ -28,13 +29,14 @@ const Home = () => {
       const res: any = await createProject(user.uid);
       addProject({
         id: res.projectId,
-        name: '',
+        name: 'undefined',
         progress: 0,
         status: 'Blank',
         uid: user.uid,
         voxelData: [],
         meshLink: '',
-        imageLink: ''
+        imageLink: '',
+        lastModified: new Date().toISOString()
       });
       setLoading(false);
       router.push(`/editor/${res.projectId}`);
@@ -47,7 +49,7 @@ const Home = () => {
         <Grid templateColumns='repeat(2, 1fr)' gap={4} w={'100%'}>
           <GridItem colSpan={1} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8} p={2}>
             <Text fontSize='md'>3D Project in Progress</Text>
-            <Flex flexDirection="column">
+            <Flex flexDirection="column" className="h-96 overflow-y-auto">
               {processingProjects.map((project: any, index: number)=>(
                 <CardView key={`progressing ${index}`} project={project} />
               ))}
@@ -56,7 +58,7 @@ const Home = () => {
           </GridItem>
           <GridItem colSpan={1} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8} p={2}>
             <Text fontSize='md'>3D Project Completed</Text>
-            <Flex flexDirection="column">
+            <Flex flexDirection="column" className="h-96 overflow-y-auto">
               {completedProjects.map((project: any, index: number)=>(
                 <CardView key={`completed_${index}`} project={project} />
               ))}

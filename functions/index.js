@@ -177,6 +177,7 @@ exports.voxelCreated = functions.https.onRequest(async (req, res) => {
 
 const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/1qao7hbqaekjpm";
 const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
+const FIREBASE_CLOUD_BASEURL = "https://us-central1-enlighten-3d-backend.cloudfunctions.net";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 exports.startStage2 = functions.https.onRequest(async (req,res) => {
@@ -195,14 +196,27 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
           return res.status(400).json("Project already completed")
         }
 
-        const messageData = {
-          projectId: projectId,
-          prompt: prompt
-        };
+        const reqRes = await fetch(`${SECOND_AI_API_BASEURL}/run`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            input: {
+              prompt: prompt
+            },
+            webhook: `${FIREBASE_CLOUD_BASEURL}/jobCompleted`
+          })
+        });
 
-        const dataBuffer = Buffer.from(JSON.stringify(messageData));
+        const resData = await reqRes.json();
 
-        pubsub.topic(topicName).publish(dataBuffer);
+        await projectRef.update({
+          status: "Generating",
+          meshLink: resData.id
+        });
 
         res.status(200).json("Requested");
       } catch (error) {
@@ -425,4 +439,27 @@ exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.top
   } catch (error) {
     console.log('Error processing AI Request:', error);
   }
+});
+
+exports.jobCompleted = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async ()=>{
+    if(req.method === 'POST'){
+      try {
+        const { id, status } = req.body;
+        const snapShot = await db.collection("projects").where("meshLink", "==", id).limit(1).get();
+        const docRef = snapShot.empty ? null : snapShot.docs[0].ref;
+  
+        if (docRef) {
+          await docRef.update({
+            status: "Completed",
+          });
+        }
+  
+        res.status(200).json("Job completed");
+      } catch (error) {
+        console.log('Error checking job status:', error);
+        res.status(500).json({ error: 'Error checking job status' });
+      }
+    }
+  })
 });

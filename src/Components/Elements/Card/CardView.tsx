@@ -50,14 +50,10 @@ const CardView = ({
           <Link href={`/editor/${id}`}>
             <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={70} width={70} fetchPriority='high' />
           </Link>
-          {progress ? 
-            <Progress colorScheme='blue' w={'110px'} bg={'gray.300'} height='20px' value={progress} hasStripe mx={2}>
-              {progress}
-            </Progress>
-            :
-            <p className="w-[110px] px-2">Not Started</p>
-          }
-          <p className="text-lg">{name || "undefined"}</p>
+          {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2">Not Started</p>}
+          {status === 'Generating' && <p className="w-[110px] px-2">Running</p>}
+          {status === 'Completed' && <p className="w-[110px] px-2">Complete</p>}
+          <p className="text-lg">{name}</p>
         </Flex>
         <div className="flex gap-x-2">
           <Button variant={'outline'} size={'sm'} colorScheme='blue' onClick={handleDuplicate}>

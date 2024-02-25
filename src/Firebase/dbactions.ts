@@ -8,7 +8,8 @@ import {
   addDoc,
   getDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  orderBy
 } from "firebase/firestore";
 import { app } from "./config";
 import { Voxel } from "utils/types";
@@ -29,7 +30,7 @@ export const getUserInfo = async (uid: string) => {
 
 export const getProjectsByUid = async (uid: string) => {
   try {
-    const q = query(collection(db, "projects"), where("uid", "==", uid));
+    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("name"), orderBy("lastModified", "desc"));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];
@@ -46,13 +47,14 @@ export const getProjectsByUid = async (uid: string) => {
 export const createProject = async (uid: string) => {
   try {
     const project = {
-      name: "",
+      name: "undefined",
       uid: uid,
       status: "Blank",
       progress: 0,
       voxelData: [],
       imageLink: "",
-      meshLink: ""
+      meshLink: "",
+      lastModified: new Date().toISOString(),
     };
     const projectsRef = collection(db, 'projects');
     const projectRef = await addDoc(projectsRef, project);
@@ -66,7 +68,10 @@ export const createProject = async (uid: string) => {
 export const changeProjectName = async (projectId: string, newProjectName: string) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
-    await updateDoc(projectRef, {name: newProjectName});
+    await updateDoc(projectRef, {
+      name: newProjectName,
+      lastModified: new Date().toISOString()
+    });
     return {name: newProjectName};
   } catch (error) {
     console.log(error);
@@ -113,9 +118,10 @@ export const voxelCreated = async (
     });
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
-      'imageLink': file,
-      'status': "Editing",
-      'voxelData': voxelData
+      imageLink: file,
+      status: "Editing",
+      voxelData: voxelData,
+      lastModified: new Date().toISOString()
     });
     const projectData = (await getDoc(projectRef)).data();
     return {
@@ -128,12 +134,14 @@ export const voxelCreated = async (
   }
 }
 
-export const updateVoxel = async (projectId: string, voxelData: Voxel[], file: string) => {
+export const updateVoxel = async (projectId: string, voxelData: Voxel[], file: string, status: string) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
-      'voxelData': voxelData,
-      'imageLink': file
+      status: status,
+      voxelData: voxelData,
+      imageLink: file,
+      lastModified: new Date().toISOString()
     });
     const projectData = (await getDoc(projectRef)).data();
     return {

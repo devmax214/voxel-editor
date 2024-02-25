@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
+import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo, Component } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF } from "@react-three/drei";
 import { mergeVertices } from "three-stdlib";
@@ -10,7 +10,7 @@ import { useBasicStore, useThreeStore } from "@/store";
 import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
 import InfoBox from "./InfoBox";
-import { Material } from "utils/voxel";
+// import { Material } from "utils/voxel";
 import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
@@ -150,6 +150,18 @@ type MeshProps = {
 }
 
 const MeshView: React.FC<MeshProps> = ({ mesh }) => {
+  const [show, setShow] = useState<boolean>(false);
+  const params = useParams();
+  const projectId = params?.projectId as string;
+  const { projects } = useProjectContext();
+  const current = projects.filter(project => project.id === projectId)[0];
+
+  useEffect(() => {
+    if (current.status === 'Completed') {
+      setShow(true);
+    }
+  }, [current]);
+
   const { nodes, materials } = useGLTF("/models/motor.glb");
 
   // if (!mesh)
@@ -160,7 +172,7 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   geometry = mergeVertices(geometry);
   geometry.computeVertexNormals();
   
-  return (
+  return (show ?
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
     //   geometry={mesh}
@@ -181,6 +193,8 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         <meshStandardMaterial attach="material" color="grey" />
       </Plane>
     </group>
+    :
+    <group></group>
   )
 }
 
@@ -220,10 +234,10 @@ const Views: React.FC = () => {
             const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
             if (current.voxelData.length === 0) {
                 const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl });
+                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             } else {
-                const res = await updateVoxel(projectId, voxelData, iconUrl);
-                updateProject(projectId, { voxelData: voxelData, imageLink: iconUrl });
+                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing");
+                updateProject(projectId, { status: "Editing",voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             }
             toast({
                 title: 'Success',
@@ -245,11 +259,12 @@ const Views: React.FC = () => {
   );
 
   const autoSave = useCallback(async () => {
+    console.log("autoSaved");
     const current = projects.filter(project => project.id === projectId)[0];
     const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
     try {
-      const res = await updateVoxel(projectId, voxelData, current.imageLink);
-      updateProject(projectId, { voxelData: voxelData });
+      const res = await updateVoxel(projectId, voxelData, current.imageLink, current.status);
+      updateProject(projectId, { voxelData: voxelData, lastModified: new Date().toISOString() });
     } catch (error) {
       console.log(error);
     }
@@ -257,7 +272,7 @@ const Views: React.FC = () => {
 
   useEffect(() => {
     document.addEventListener('keyup', save);
-    const timer = setInterval(autoSave, 10 * 60 * 1000);
+    const timer = setInterval(autoSave, 60 * 1000);
 
     return () => {
       document.removeEventListener('keyup', save);

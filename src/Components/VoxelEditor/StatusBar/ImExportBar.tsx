@@ -50,7 +50,7 @@ const ImExportBar = () => {
 
   return (
     <div className="flex gap-x-2">
-      {/* <div className="relative">
+      <div className="relative">
         <input
           className="absolute w-full h-full opacity-0 z-10"
           type="file"
@@ -58,7 +58,7 @@ const ImExportBar = () => {
           onChange={handleFileUpload}
           />
         <Button className="absolute uppercase z-0">import</Button>
-      </div> */}
+      </div>
       <Button as={'div'} className="uppercase" onClick={handleExportMesh}>export</Button>
     </div>
   );

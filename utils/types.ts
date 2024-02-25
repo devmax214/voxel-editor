@@ -13,4 +13,5 @@ export type Project = {
   voxelData: Voxel[];
   meshLink: string;
   imageLink: string;
+  lastModified: string;
 }

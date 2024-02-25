@@ -1,5 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  useDisclosure
+} from '@chakra-ui/react';
 import { useBasicStore, useThreeStore } from '@/store';
 import useMeshReqStatus from '@/hooks/useMeshReqStatus';
 import { getStatusById, requestMesh } from 'utils/apiCall';
@@ -8,6 +17,7 @@ import { Button, Spinner } from '@chakra-ui/react';
 import { changeProjectName, startStage2 } from 'utils/api';
 import { useProjectContext } from "@/contexts/projectContext";
 import { checkStatus } from '@/Firebase/dbactions';
+import { generatePointCloud } from 'utils/voxel';
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -19,8 +29,11 @@ const PromptEditor = () => {
   const { voxels, setVoxels, setMesh, projectName, setProjectName } = useThreeStore();
   const [propmt, setPrompt] = useState<string>('');
   const [meshData, setMeshData] = useState(null);
-  const { setMeshReqStatus, setLoading, setViewMode } = useBasicStore();
+  const { setMeshReqStatus, setLoading, setViewMode, viewMode } = useBasicStore();
   const { updateProject } = useProjectContext();
+
+  const {isOpen, onOpen, onClose} = useDisclosure();
+  const cancelRef = React.useRef(null);
 
   const [voxelData, imMesh] = useMeshReqStatus(meshData, voxelSize);
 
@@ -37,7 +50,7 @@ const PromptEditor = () => {
 
   useEffect(() => {
     setVoxels(voxelData);
-    setMesh(imMesh);
+    // setMesh(imMesh);
   }, [voxelData, setVoxels, imMesh, setMesh]);
 
   const updateProjectName = async () => {
@@ -51,6 +64,16 @@ const PromptEditor = () => {
   }
 
   const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
+
+  const handleSave = useCallback(() => {
+    const evt = new KeyboardEvent('keyup', {
+        bubbles: true,
+        cancelable: true,
+        code: "Backslash"
+    });
+
+    document.dispatchEvent(evt);
+  }, []);
 
   useEffect(() => {    
     if (!reqId) return;
@@ -68,20 +91,22 @@ const PromptEditor = () => {
           setLoading(false);
           window.localStorage.removeItem(projectId);
           setReqId(null);
+          setViewMode('voxel');
           setMeshData(res.output);
+          setTimeout(handleSave, 2000);
         }
       }
     }
     
     checkReq();
-  }, [projectId, reqId, setLoading, setMeshReqStatus, delay]);
+  }, [projectId, reqId, setLoading, setMeshReqStatus, delay, handleSave, setViewMode]);
 
   const handleGenerate = async () => {
     const res = await requestMesh(propmt);
     if (res) {
       window.localStorage.setItem(projectId, res.id);
       setReqId(res.id);
-      if (!projectName)
+      if (projectName === 'undefined')
         await updateProjectName();
     }
   }
@@ -91,7 +116,6 @@ const PromptEditor = () => {
 
     const checkReq = async () => {
       const res = await checkStatus(projectId) as ({status: string, progress: number});
-      console.log(res);
       if (res) {
         if (res.status === 'Editing' || res.status === 'Generating') {
           await delay(10000);
@@ -99,6 +123,7 @@ const PromptEditor = () => {
         }
         else if (res.status === 'Completed') {
           setViewMode('mesh');
+          updateProject(projectId, {status: "Completed"});
           window.sessionStorage.removeItem(projectId);
           setIsGenerating(false);
         }
@@ -106,28 +131,54 @@ const PromptEditor = () => {
     }
 
     checkReq();
-  }, [projectId, isGenerating, delay, setViewMode]);
+  }, [projectId, isGenerating, delay, setViewMode, updateProject]);
 
   const handleGenerateModel = async () => {
     startStage2(projectId, propmt);
+    updateProject(projectId, {status: "Generating"});
     window.sessionStorage.setItem(projectId, "true");
     setIsGenerating(true);
   }
 
   return (
-    <div className="flex gap-x-2">
-      <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
-      <Button colorScheme='orange' onClick={handleGenerate} isDisabled={propmt === ''}>Generate<br />Voxel</Button>
-      <Button colorScheme='blue' onClick={handleGenerateModel} isDisabled={propmt === '' || voxels.length === 0 || isGenerating}>
-        {isGenerating ?
-          <div>
-            <Spinner />
-          </div>
+    <>
+      <div className="flex gap-x-2">
+        <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
+        {viewMode === 'voxel' ?
+          <Button colorScheme='orange' onClick={voxels.length > 0 ? onOpen : handleGenerate} isDisabled={propmt === ''}>Generate<br />Voxel</Button>
           :
-          <div>Generate<br />Model</div>
-        }
-      </Button>
-    </div>
+          <Button colorScheme='blue' onClick={handleGenerateModel} isDisabled={propmt === '' || voxels.length === 0 || isGenerating}>
+            {isGenerating ?
+              <div>
+                <Spinner />
+              </div>
+              :
+              <div>Generate<br />Model</div>
+            }
+          </Button>}
+      </div>
+
+      <AlertDialog motionPreset='slideInBottom' isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose} >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Delete Project
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              Are you sure? This will override voxel in the editor.
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button colorScheme='red' onClick={() => {onClose(); handleGenerate();}} ml={3}>
+                Override
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
+    </>
   );
 }
 

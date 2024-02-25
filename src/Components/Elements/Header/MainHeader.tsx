@@ -90,22 +90,25 @@ const FileNamgeChanger = () => {
     const [editing, setEditing] = useState<boolean>(false);
     const [name, setName] = useState<string>("");
     const { setLoading } = useBasicStore();
-    const { projectName, setProjectName } = useThreeStore();
-    const { updateProject } = useProjectContext();
+    // const { projectName, setProjectName } = useThreeStore();
+    const { projects, updateProject } = useProjectContext();
+    const current = projects.filter(project => project.id === projectId)[0];
     
-    useEffect(() => {
-        setName(projectName);
-    }, [projectName]);
+    // useEffect(() => {
+    //     if (current) {
+    //         setName(current.name);
+    //     }
+    // }, [current]);
 
     const handleProjectName = async () => {
         if (editing) {
             setLoading(true);
             const res: any = await changeProjectName(projectId, name);
-            setProjectName(res.name);
+            // setProjectName(res.name);
             updateProject(projectId, { name: res.name });
             setLoading(false);
         } else {
-            setName(projectName);
+            setName(current.name);
         }
         setEditing(val => !val);
     }
@@ -118,8 +121,8 @@ const FileNamgeChanger = () => {
                 :
                 <>
                     <div className="w-40 text-center">
-                        <p className="text-black">{name || "undefined"}</p>
-                        <p className="text-black text-sm">Last Save</p>
+                        <p className="text-black">{current.name || "undefined"}</p>
+                        <p className="text-black text-sm">{new Date(current.lastModified).toLocaleString()}</p>
                     </div>
                 </>
             }

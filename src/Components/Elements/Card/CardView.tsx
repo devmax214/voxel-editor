@@ -1,4 +1,4 @@
-import { Box, Flex, Progress, Text, Image, Button } from '@chakra-ui/react';
+import { Box, Flex, Progress, Text, Image, Button, Spinner } from '@chakra-ui/react';
 import {
   AlertDialog,
   AlertDialogOverlay,
@@ -51,7 +51,9 @@ const CardView = ({
             <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={70} width={70} fetchPriority='high' />
           </Link>
           {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2">Not Started</p>}
-          {status === 'Generating' && <p className="w-[110px] px-2">Running</p>}
+          {status === 'Generating' && <div className="w-[100px] px-2 text-center">
+            <Spinner />
+          </div>}
           {status === 'Completed' && <p className="w-[110px] px-2">Complete</p>}
           <p className="text-lg">{name}</p>
         </Flex>

@@ -3,7 +3,7 @@
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo, Component } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF } from "@react-three/drei";
-import { mergeVertices } from "three-stdlib";
+import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
 
@@ -174,6 +174,21 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   delete geometry.attributes.normal;
   geometry = mergeVertices(geometry);
   geometry.computeVertexNormals();
+
+  // const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
+  // Apply these materials to the subsequent OBJ loader
+  // const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
+  //   if (model) {
+  //     model.setMaterials(materials);
+
+  //   }
+  //   return model;
+  // });
+
+  // let geometry = (nodes.model as THREE.Mesh).geometry;
+  // delete geometry.attributes.normal;
+  // geometry = mergeVertices(geometry);
+  // geometry.computeVertexNormals();
   
   return (show ?
     // <mesh
@@ -182,6 +197,20 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
     //   material={Material}
     // />
     <group>
+      {/* <mesh
+        castShadow
+        receiveShadow
+        rotation={[Math.PI * 3 / 2, 0, 0]}
+        geometry={obj.children[0].geometry}
+      >
+        <meshPhysicalMaterial
+          attach={'material'}
+          map={obj.children[0].material.map}
+          roughnessMap={obj.children[0].material.roughnessMap}
+          // normalMap={obj.children[0].material.normalMap}
+          metalnessMap={obj.children[0].material.metalnessMap}
+        />
+      </mesh> */}
       <mesh
         castShadow
         geometry={geometry}

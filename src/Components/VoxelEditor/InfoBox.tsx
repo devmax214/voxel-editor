@@ -16,7 +16,7 @@ const InfoBox = () => {
         toast({
           id: toastId,
           title: 'Completed',
-          description: 'Mesh successfully generated',
+          description: 'Voxel successfully generated',
           status:'success',
           duration: 5000,
           isClosable: true,
@@ -35,7 +35,7 @@ const InfoBox = () => {
         toast({
           id: toastId,
           title: 'Failed',
-          description: 'Mesh generation failed',
+          description: 'Voxel generation failed',
           status: 'error',
           duration: 5000,
           isClosable: true,

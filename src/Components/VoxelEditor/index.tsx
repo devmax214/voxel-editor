@@ -18,6 +18,7 @@ import { useToast } from "@chakra-ui/react";
 // import { voxelCreated, updateVoxel } from "utils/api";
 import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import ModelTip from "./ModelTip";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -157,12 +158,14 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   const current = projects.filter(project => project.id === projectId)[0];
 
   useEffect(() => {
-    if (current.status === 'Completed') {
+    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshLink) {
       setShow(true);
     }
   }, [current]);
 
-  const { nodes, materials } = useGLTF("/models/motor.glb");
+  const modelFile = current?.meshLink;
+
+  const { nodes, materials } = useGLTF(modelFile || "/models/motor.glb");
 
   // if (!mesh)
   //   return null;
@@ -231,12 +234,13 @@ const Views: React.FC = () => {
             const iconUrl = await getDownloadURL(storageRef);
             
             const current = projects.filter(project => project.id === projectId)[0];
+            console.log("saved", current);
             const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
             if (current.voxelData.length === 0) {
-                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl);
+                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
                 updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             } else {
-                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing");
+                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
                 updateProject(projectId, { status: "Editing",voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             }
             toast({
@@ -259,14 +263,16 @@ const Views: React.FC = () => {
   );
 
   const autoSave = useCallback(async () => {
-    console.log("autoSaved");
     const current = projects.filter(project => project.id === projectId)[0];
-    const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
-    try {
-      const res = await updateVoxel(projectId, voxelData, current.imageLink, current.status);
-      updateProject(projectId, { voxelData: voxelData, lastModified: new Date().toISOString() });
-    } catch (error) {
-      console.log(error);
+    if (current?.voxelData.length !== voxels.length) {
+      console.log("autoSaved");
+      const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+      try {
+        const res = await updateVoxel(projectId, voxelData, current.imageLink, "Editing", current.prompt);
+        updateProject(projectId, { voxelData: voxelData, status: "Editing", lastModified: new Date().toISOString() });
+      } catch (error) {
+        console.log(error);
+      }
     }
   }, [projectId, projects, voxels, updateProject]);
 
@@ -301,6 +307,7 @@ const Scene: React.FC = () => {
       <InfoBox />
       <StatusBar />
       <ToolInfo />
+      <ModelTip />
       <div className="w-full h-full">
         <Canvas
           shadows

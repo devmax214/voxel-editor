@@ -68,13 +68,8 @@ export async function voxelCreated(uid: string, projectId: string, usedPrice: nu
 
 export async function startStage2(projectId: string, prompt: string) {
   const requestUrl = encodeURI(BASE_URL + '/startStage2');
-  try {
-    const axiosResponse = await axios.post(requestUrl, { projectId, prompt });
-    return axiosResponse;
-  } catch (error) {
-    console.error(`${requestUrl} error: `, error)
-    return {};
-  }
+  const axiosResponse = await axios.post(requestUrl, { projectId, prompt });
+  return axiosResponse;
 }
 
 export async function updateVoxel(projectId: string, voxelData: Voxel[], file: string) {

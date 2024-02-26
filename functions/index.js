@@ -10,13 +10,11 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require('cors')({ origin: true });
-const { PubSub } = require('@google-cloud/pubsub');
 
 admin.initializeApp();
 // admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
 const storage = admin.storage().bucket();
-const pubsub = new PubSub();
 const topicName = 'SecondAIReq';
 
 exports.createUserFile = functions.auth.user().onCreate(async (user) => {
@@ -179,6 +177,7 @@ const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/1qao7hbqaekjpm";
 const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
 const FIREBASE_CLOUD_BASEURL = "https://us-central1-enlighten-3d-backend.cloudfunctions.net";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const DEFAULT_REQ_CREDIT = 100;
 
 exports.startStage2 = functions.https.onRequest(async (req,res) => {
   cors(req, res, async ()=>{
@@ -188,6 +187,14 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
       try {
         const projectRef = db.collection("projects").doc(projectId);
         const projectData = (await projectRef.get()).data();
+
+        const userRef = db.collection('users').doc(projectData.uid);
+        const userData = (await userRef.get()).data();
+
+        if (userData.billing.compute_unit < DEFAULT_REQ_CREDIT) {
+          return res.status(400).json("You don't have enough credit");
+        }
+
         if(projectData.status === "Blank"){
           return res.status(400).json("You need to create voxel firstly")
         }else if(projectData.status === "Generating"){
@@ -195,6 +202,11 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
         }else if(projectData.status === "Completed"){
           return res.status(400).json("Project already completed")
         }
+
+        await userRef.update({
+          'billing.compute_unit': userData.billing.compute_unit - DEFAULT_REQ_CREDIT,
+          'billing.hold': DEFAULT_REQ_CREDIT
+        })
 
         const reqRes = await fetch(`${SECOND_AI_API_BASEURL}/run`, {
           method: 'POST',
@@ -207,7 +219,7 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
             input: {
               prompt: prompt
             },
-            webhook: `${FIREBASE_CLOUD_BASEURL}/jobCompleted`
+            webhook: `${FIREBASE_CLOUD_BASEURL}/meshGenerated`
           })
         });
 
@@ -215,7 +227,7 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
 
         await projectRef.update({
           status: "Generating",
-          meshLink: resData.id
+          meshReqId: resData.id
         });
 
         res.status(200).json("Requested");
@@ -224,45 +236,6 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
         res.status(500).json({ error: 'Error Second Stage Project' });
       }
     }
-    // if(req.method === 'GET'){
-    //   try {
-    //     const projectId = req.query.projectId;
-    //     const projectRef = db.collection('projects').doc(projectId);
-    //     const projectData = (await projectRef.get()).data()
-        
-    //     const uid = projectData.uid;
-    //     const userRef = db.collection('users').doc(uid);
-    //     const userData = (await userRef.get()).data();
-
-    //     if(projectData.status !== "Blank"){
-    //       return res.status(400).json("You need to create voxel firstly")
-    //     }else if(projectData.status !== "Generating"){
-    //       return res.status(400).json("It is already generating stage.")
-    //     }else if(projectData.status !== "Completed"){
-    //       return res.status(400).json("Project already completed")
-    //     }
-
-    //     if(userData.billing.compute_unit >= 100){
-    //       await userRef.update({
-    //         'billing.hold': 100,
-    //         'billing.compute_unit': userData.billing.compute_unit - 100
-    //       });
-
-    //       await projectRef.update({
-    //         'status': "Generating",
-    //       });
-          
-    //       res.status(200).json("Started");
-    //     }
-    //     else
-    //       res.status(400).json("Insufficient credit")
-    //   } catch (error) {
-    //     console.log('Error finding user:', error);
-    //     res.status(500).json({ error: error });
-    //   }
-    // } else {
-    //   res.status(405).send('Method Not Allowed');
-    // }
   })
 })
 
@@ -441,24 +414,70 @@ exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.top
   }
 });
 
-exports.jobCompleted = functions.https.onRequest(async (req, res) => {
+exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'POST'){
       try {
         const { id, status } = req.body;
-        const snapShot = await db.collection("projects").where("meshLink", "==", id).limit(1).get();
-        const docRef = snapShot.empty ? null : snapShot.docs[0].ref;
+        const snapShot = await db.collection("projects").where("meshReqId", "==", id).limit(1).get();
+        const projectRef = snapShot.empty ? null : snapShot.docs[0].ref;
+        const projectData = snapShot.empty ? null : snapShot.docs[0].data();
   
-        if (docRef) {
-          await docRef.update({
+        if (projectRef) {
+          await projectRef.update({
             status: "Completed",
+            meshLink: "/models/motor.glb"
           });
+
+          const userRef = db.collection('users').doc(projectData.uid);
+          const userData = (await userRef.get()).data();
+
+          const requireCredit = 120;
+          
+          await userRef.update({
+            'billing.compute_unit': userData.billing.compute_unit - (requireCredit - DEFAULT_REQ_CREDIT),
+            'billing.hold': 0
+          });
+
+          res.status(200).json("Job completed");
+        }
+        else {
+          res.status(404).json("No document founded")
         }
   
-        res.status(200).json("Job completed");
       } catch (error) {
-        console.log('Error checking job status:', error);
-        res.status(500).json({ error: 'Error checking job status' });
+        console.log('Mesh generation failed:', error);
+        res.status(500).json('Mesh generation failed');
+      }
+    }
+  })
+});
+
+exports.voxelGenerated = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    if (req.method === 'POST') {
+      try {
+        const { id, status } = req.body;
+        const snapShot = await db.collection("projects").where("voxelReqId", "==", id).limit(1).get();
+        const projectData = snapShot.empty ? null : snapShot.docs[0].data();
+
+        if (projectData) {
+          const userRef = db.collection('users').doc(projectData.uid);
+          const userData = (await userRef.get()).data();
+
+          await userRef.update({
+            'billing.compute_unit': userData.billing.compute_unit - 1
+          });
+
+          res.status(200).json("Voxel generation success");
+        }
+        else {
+          res.status(404).json("No document founded")
+        }
+
+      } catch (error) {
+        console.log('Voxel generation failed:', error);
+        res.status(500).json('Voxel generation failed');
       }
     }
   })

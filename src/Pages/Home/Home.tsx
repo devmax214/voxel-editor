@@ -33,10 +33,13 @@ const Home = () => {
         progress: 0,
         status: 'Blank',
         uid: user.uid,
+        voxelReqId: '',
         voxelData: [],
+        meshReqId: '',
         meshLink: '',
         imageLink: '',
-        lastModified: new Date().toISOString()
+        lastModified: new Date().toISOString(),
+        prompt: "",
       });
       setLoading(false);
       router.push(`/editor/${res.projectId}`);

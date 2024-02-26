@@ -51,10 +51,13 @@ export const createProject = async (uid: string) => {
       uid: uid,
       status: "Blank",
       progress: 0,
+      voxelReqId: "",
       voxelData: [],
       imageLink: "",
+      meshReqId: "",
       meshLink: "",
       lastModified: new Date().toISOString(),
+      prompt: ""
     };
     const projectsRef = collection(db, 'projects');
     const projectRef = await addDoc(projectsRef, project);
@@ -108,7 +111,8 @@ export const voxelCreated = async (
   projectId: string,
   usedPrice: number,
   voxelData: Voxel[],
-  file: string
+  file: string,
+  prompt: string
 ) => {
   try {
     const userRef = doc(db, 'users', uid);
@@ -121,7 +125,8 @@ export const voxelCreated = async (
       imageLink: file,
       status: "Editing",
       voxelData: voxelData,
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
+      prompt: prompt
     });
     const projectData = (await getDoc(projectRef)).data();
     return {
@@ -134,14 +139,21 @@ export const voxelCreated = async (
   }
 }
 
-export const updateVoxel = async (projectId: string, voxelData: Voxel[], file: string, status: string) => {
+export const updateVoxel = async (
+  projectId: string,
+  voxelData: Voxel[],
+  file: string,
+  status: string,
+  prompt: string
+) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
       status: status,
       voxelData: voxelData,
       imageLink: file,
-      lastModified: new Date().toISOString()
+      lastModified: new Date().toISOString(),
+      prompt: prompt
     });
     const projectData = (await getDoc(projectRef)).data();
     return {
@@ -160,7 +172,23 @@ export const checkStatus = async (projectId: string) => {
     const projectData = (await getDoc(projectRef)).data();
     return {
       status: projectData?.status,
-      progress: projectData?.progress
+      progress: projectData?.progress,
+      meshLink: projectData?.meshLink
+    }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
+  try {
+    const projectRef = doc(db, 'projects', projectId);
+    await updateDoc(projectRef, {
+      voxelReqId: voxelReqId
+    });
+    return {
+      message: "Successfully saved Voxel Request Id"
     }
   } catch (error) {
     console.log(error);

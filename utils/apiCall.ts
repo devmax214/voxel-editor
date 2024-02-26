@@ -1,5 +1,6 @@
 import axios from "axios";
 
+const FIREBASE_CLOUD_BASEURL = process.env.NEXT_PUBLIC_SERVER_BASE_URL;
 const BASE_URL = process.env.NEXT_PUBLIC_AI_BASE_URL;
 const API_KEY = process.env.NEXT_PUBLIC_AI_APIKEY;
 
@@ -19,7 +20,8 @@ export async function requestMesh(prompt: string) {
     const axiosResponse = await apiCall.post(requestUrl, { 
       input: {
         prompt: prompt
-      }
+      },
+      webhook: `${FIREBASE_CLOUD_BASEURL}/voxelGenerated`
     });
     return axiosResponse.data;
   } catch (error) {

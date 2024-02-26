@@ -117,12 +117,12 @@ const FileNamgeChanger = () => {
         <div className="flex items-center">
             {
                 editing ?
-                <Input className="w-40 text-black" value={name} onChange={e => setName(e.target.value)} />
+                <Input className="w-48 text-black" value={name} onChange={e => setName(e.target.value)} />
                 :
                 <>
-                    <div className="w-40 text-center">
-                        <p className="text-black">{current.name || "undefined"}</p>
-                        <p className="text-black text-sm">{new Date(current.lastModified).toLocaleString()}</p>
+                    <div className="w-48 text-center">
+                        <p className="text-black">{current?.name || "undefined"}</p>
+                        <p className="text-black text-sm">{new Date(current?.lastModified).toLocaleString()}</p>
                     </div>
                 </>
             }

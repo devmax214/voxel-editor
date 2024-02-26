@@ -7,7 +7,13 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
-  useDisclosure
+  useDisclosure,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  useToast
 } from '@chakra-ui/react';
 import { useBasicStore, useThreeStore } from '@/store';
 import useMeshReqStatus from '@/hooks/useMeshReqStatus';
@@ -16,23 +22,28 @@ import { Input } from '@chakra-ui/input';
 import { Button, Spinner } from '@chakra-ui/react';
 import { changeProjectName, startStage2 } from 'utils/api';
 import { useProjectContext } from "@/contexts/projectContext";
-import { checkStatus } from '@/Firebase/dbactions';
+import { checkStatus, getUserInfo, saveVoxelReqId } from '@/Firebase/dbactions';
 import { generatePointCloud } from 'utils/voxel';
+import { useAuthContext } from '@/contexts/authContext';
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
 const PromptEditor = () => {
+  const toast = useToast();
+  const { user, setUserInfo } = useAuthContext();
   const params = useParams();
   const projectId = params?.projectId as string;
   const [reqId, setReqId] = useState<string| null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const { voxels, setVoxels, setMesh, projectName, setProjectName } = useThreeStore();
+  const { voxels, setVoxels, setMesh } = useThreeStore();
   const [propmt, setPrompt] = useState<string>('');
   const [meshData, setMeshData] = useState(null);
   const { setMeshReqStatus, setLoading, setViewMode, viewMode } = useBasicStore();
-  const { updateProject } = useProjectContext();
+  const { projects, updateProject } = useProjectContext();
+  const current = projects.filter(project => project.id === projectId)[0];
 
-  const {isOpen, onOpen, onClose} = useDisclosure();
+  const alert = useDisclosure();
+  const outDated = useDisclosure();
   const cancelRef = React.useRef(null);
 
   const [voxelData, imMesh] = useMeshReqStatus(meshData, voxelSize);
@@ -49,21 +60,29 @@ const PromptEditor = () => {
   }, [projectId]);
 
   useEffect(() => {
+    if (current){
+      setPrompt(current.prompt);
+      if (current.status === 'Editing' && current.meshLink) {
+        outDated.onOpen();
+      }
+    }
+  }, [current]);
+
+  useEffect(() => {
     setVoxels(voxelData);
     // setMesh(imMesh);
   }, [voxelData, setVoxels, imMesh, setMesh]);
 
-  const updateProjectName = async () => {
-    try {
-      const res = await changeProjectName(projectId, propmt);
-      setProjectName(res.name);
-      updateProject(projectId, { name: res.name });
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
   const delay = useCallback((ms: number) => new Promise(resolve => setTimeout(resolve, ms)), []);
+
+  const updateUserInfo = useCallback(() => {
+    const fetchUserInfo = async () => {
+      const userData: any = await getUserInfo(user?.uid as string);
+      setUserInfo(userData);
+    }
+
+    fetchUserInfo();
+  }, [user, setUserInfo]);
 
   const handleSave = useCallback(() => {
     const evt = new KeyboardEvent('keyup', {
@@ -90,6 +109,7 @@ const PromptEditor = () => {
         else if (res.status === 'COMPLETED') {
           setLoading(false);
           window.localStorage.removeItem(projectId);
+          setTimeout(updateUserInfo, 1500);
           setReqId(null);
           setViewMode('voxel');
           setMeshData(res.output);
@@ -99,15 +119,24 @@ const PromptEditor = () => {
     }
     
     checkReq();
-  }, [projectId, reqId, setLoading, setMeshReqStatus, delay, handleSave, setViewMode]);
+  }, [projectId, reqId, setLoading, setMeshReqStatus, delay, handleSave, setViewMode, updateUserInfo]);
 
   const handleGenerate = async () => {
-    const res = await requestMesh(propmt);
-    if (res) {
-      window.localStorage.setItem(projectId, res.id);
-      setReqId(res.id);
-      if (projectName === 'undefined')
-        await updateProjectName();
+    try {
+      const res = await requestMesh(propmt);
+      await saveVoxelReqId(projectId, res.id);
+      if (res) {
+        window.localStorage.setItem(projectId, res.id);
+        setReqId(res.id);
+        if (current.name === 'undefined') {
+          const res = await changeProjectName(projectId, propmt);
+          updateProject(projectId, { name: res.name, prompt: propmt });
+        } else {
+          updateProject(projectId, { prompt: propmt });
+        }
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -115,7 +144,7 @@ const PromptEditor = () => {
     if (!isGenerating) return;
 
     const checkReq = async () => {
-      const res = await checkStatus(projectId) as ({status: string, progress: number});
+      const res = await checkStatus(projectId) as ({status: string, progress: number, meshLink: string;});
       if (res) {
         if (res.status === 'Editing' || res.status === 'Generating') {
           await delay(10000);
@@ -123,56 +152,97 @@ const PromptEditor = () => {
         }
         else if (res.status === 'Completed') {
           setViewMode('mesh');
-          updateProject(projectId, {status: "Completed"});
+          updateProject(projectId, {status: "Completed", meshLink: res.meshLink});
           window.sessionStorage.removeItem(projectId);
+          updateUserInfo();
           setIsGenerating(false);
         }
       }
     }
 
     checkReq();
-  }, [projectId, isGenerating, delay, setViewMode, updateProject]);
+  }, [projectId, isGenerating, delay, setViewMode, updateProject, updateUserInfo]);
 
   const handleGenerateModel = async () => {
-    startStage2(projectId, propmt);
-    updateProject(projectId, {status: "Generating"});
-    window.sessionStorage.setItem(projectId, "true");
-    setIsGenerating(true);
+    try {
+      await startStage2(projectId, current?.prompt);
+      updateUserInfo();
+      outDated.onClose();
+      updateProject(projectId, {status: "Generating"});
+      window.sessionStorage.setItem(projectId, "true");
+      setIsGenerating(true);
+    } catch (error: any) {
+      console.log(error);
+      toast({
+        title: 'Error',
+        description: error?.response?.data,
+        status: 'warning',
+        duration: 5000,
+        isClosable: true,
+        variant: 'left-accent',
+        position: 'top',
+        containerStyle: {
+          top: '120px'
+        }
+      });
+    }
+  }
+
+  const handleClose = () => {
+    alert.onClose();
+    if (viewMode === 'voxel') handleGenerate();
+    else handleGenerateModel();
   }
 
   return (
     <>
       <div className="flex gap-x-2">
-        <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
         {viewMode === 'voxel' ?
-          <Button colorScheme='orange' onClick={voxels.length > 0 ? onOpen : handleGenerate} isDisabled={propmt === ''}>Generate<br />Voxel</Button>
+          <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
           :
-          <Button colorScheme='blue' onClick={handleGenerateModel} isDisabled={propmt === '' || voxels.length === 0 || isGenerating}>
-            {isGenerating ?
-              <div>
-                <Spinner />
-              </div>
-              :
-              <div>Generate<br />Model</div>
-            }
-          </Button>}
+          <Input placeholder="Propmt" isDisabled={true} value={current?.prompt} onChange={e => setPrompt(e.target.value)} />
+        }
+        {viewMode === 'voxel' ?
+          <Button className='w-44' colorScheme='orange' onClick={voxels.length > 0 ? alert.onOpen : handleGenerate} isDisabled={propmt === ''}>Generate Voxel</Button>
+          :
+          <Popover
+            placement='right'
+            isOpen={outDated.isOpen}
+          >
+            <PopoverTrigger>
+              <Button className='w-44' colorScheme='blue' onClick={alert.onOpen} isDisabled={voxels.length === 0 || isGenerating}>
+                {isGenerating ?
+                  <div>
+                    <Spinner />
+                  </div>
+                  :
+                  <div>Generate Mesh</div>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              <PopoverBody>
+                <p className="text-sm">Mesh is outdated, click here to regenerate</p>
+              </PopoverBody>
+            </PopoverContent>
+          </Popover>}
       </div>
 
-      <AlertDialog motionPreset='slideInBottom' isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose} >
+      <AlertDialog motionPreset='slideInBottom' isOpen={alert.isOpen} leastDestructiveRef={cancelRef} onClose={alert.onClose} >
         <AlertDialogOverlay>
           <AlertDialogContent>
             <AlertDialogHeader fontSize='lg' fontWeight='bold'>
-              Delete Project
+              {viewMode === 'voxel' ? 'Override voxel' : 'Generate Model'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              Are you sure? This will override voxel in the editor.
+              {viewMode === 'voxel' ? 'Are you sure? This will override voxel in the editor.' : 'Are you sure? This process can take approximately 2 hours and 120 credits for mesh generation. You can leave page and come back later.'}
             </AlertDialogBody>
             <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
+              <Button ref={cancelRef} onClick={alert.onClose}>
                 Cancel
               </Button>
-              <Button colorScheme='red' onClick={() => {onClose(); handleGenerate();}} ml={3}>
-                Override
+              <Button colorScheme='red' onClick={handleClose} ml={3}>
+                {viewMode === 'voxel' ? 'Override' : 'Generate'}
               </Button>
             </AlertDialogFooter>
           </AlertDialogContent>

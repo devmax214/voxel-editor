@@ -10,8 +10,11 @@ export type Project = {
   progress: number;
   status: "Blank" | "Editing" | "Generating" | "Completed";
   uid: string;
+  voxelReqId: string;
   voxelData: Voxel[];
+  meshReqId: string;
   meshLink: string;
   imageLink: string;
   lastModified: string;
+  prompt: string;
 }

@@ -218,8 +218,8 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         material={material}
       />
       <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
-        <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[10, 10, 10]} />
-        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[10, 5, 5]} />
+        <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
+        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
       </AccumulativeShadows>
       <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
     </group>
@@ -232,7 +232,7 @@ const SceneBackground: React.FC = () => {
   const { scene } = useThree();
 
   useEffect(() => {
-    scene.background = new THREE.Color('grey');
+    scene.background = new THREE.Color('lightgrey');
   }, [scene]);
 
   return null;
@@ -251,42 +251,44 @@ const Views: React.FC = () => {
   const save = useCallback(async (e: KeyboardEvent) => {
     if (e.code === "Backslash" && user) {
       e.preventDefault();
-      gl.domElement.toBlob(async (blob) => {
-        if (blob) {
-          try {
-            setLoading(true);
-            const storage = getStorage();
-            const storageRef = ref(storage, `${projectId}/icon.png`);
-            const snapshot = await uploadBytes(storageRef, blob);
-            const iconUrl = await getDownloadURL(storageRef);
+      if (viewMode === 'voxel') {
+        gl.domElement.toBlob(async (blob) => {
+          if (blob) {
+            try {
+              setLoading(true);
+              const storage = getStorage();
+              const storageRef = ref(storage, `${projectId}/icon.png`);
+              const snapshot = await uploadBytes(storageRef, blob);
+              const iconUrl = await getDownloadURL(storageRef);
 
-            const current = projects.filter(project => project.id === projectId)[0];
-            console.log("saved", current);
-            const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
-            if (current.voxelData.length === 0) {
-              const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
-              updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
-            } else {
-              const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
-              updateProject(projectId, { status: "Editing", voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              const current = projects.filter(project => project.id === projectId)[0];
+              console.log("saved", current);
+              const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
+              if (current.voxelData.length === 0) {
+                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
+                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              } else {
+                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
+                updateProject(projectId, { status: "Editing", voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              }
+              toast({
+                title: 'Success',
+                description: "You saved voxel data successfully.",
+                status: 'success',
+                position: 'top',
+                duration: 3000,
+                isClosable: true,
+              });
+              setLoading(false);
+            } catch (error) {
+              setLoading(false);
             }
-            toast({
-              title: 'Success',
-              description: "You saved voxel data successfully.",
-              status: 'success',
-              position: 'top',
-              duration: 3000,
-              isClosable: true,
-            });
-            setLoading(false);
-          } catch (error) {
-            setLoading(false);
           }
-        }
-      }, 'image/png');
+        }, 'image/png');
+      }
     }
   },
-    [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
+    [gl, user, projectId, projects, setLoading, toast, updateProject, voxels, viewMode]
   );
 
   const autoSave = useCallback(async () => {
@@ -336,7 +338,6 @@ const Scene: React.FC = () => {
       <div className="w-full h-full">
         <Canvas
           shadows="soft"
-          // shadows
           flat={true}
           dpr={[1, 1]}
           frameloop="demand"

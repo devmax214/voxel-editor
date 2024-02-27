@@ -132,6 +132,8 @@ const FileNamgeChanger = () => {
 }
 
 const FileActionBar = () => {
+    const { viewMode } = useBasicStore();
+
     const handleSave = () => {
         const evt = new KeyboardEvent('keyup', {
             bubbles: true,
@@ -144,7 +146,7 @@ const FileActionBar = () => {
 
     return (
         <div className="flex items-center gap-x-4">
-            <Button className="uppercase" onClick={handleSave}>save</Button>
+            {viewMode === 'voxel' && <Button className="uppercase" onClick={handleSave}>save</Button>}
             <Button className="uppercase">feedback</Button>
         </div>
     );

@@ -55,7 +55,7 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
 
   const { removeMode } = useBasicStore();
   const { addVoxel, removeVoxel } = useThreeStore();
-  
+
   useEffect(() => {
     if (ref.current) {
       for (let i = 0; i < voxels.length; i++) {
@@ -109,7 +109,7 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
         const { instanceId } = intersects[0];
         if (instanceId) {
           const tmpPosition = voxels[instanceId];
-          
+
           if (!removeMode) {
             const { x, y, z } = tmpPosition;
             const dir = [
@@ -189,7 +189,7 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   // delete geometry.attributes.normal;
   // geometry = mergeVertices(geometry);
   // geometry.computeVertexNormals();
-  
+
   return (show ?
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
@@ -266,24 +266,24 @@ const Views: React.FC = () => {
             const storageRef = ref(storage, `${projectId}/icon.png`);
             const snapshot = await uploadBytes(storageRef, blob);
             const iconUrl = await getDownloadURL(storageRef);
-            
+
             const current = projects.filter(project => project.id === projectId)[0];
             console.log("saved", current);
-            const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+            const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
             if (current.voxelData.length === 0) {
-                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
+              updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             } else {
-                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
-                updateProject(projectId, { status: "Editing",voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
+              updateProject(projectId, { status: "Editing", voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
             }
             toast({
-                title: 'Success',
-                description: "You saved voxel data successfully.",
-                status: 'success',
-                position: 'top',
-                duration: 3000,
-                isClosable: true,
+              title: 'Success',
+              description: "You saved voxel data successfully.",
+              status: 'success',
+              position: 'top',
+              duration: 3000,
+              isClosable: true,
             });
             setLoading(false);
           } catch (error) {
@@ -293,14 +293,14 @@ const Views: React.FC = () => {
       }, 'image/png');
     }
   },
-  [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
+    [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
   );
 
   const autoSave = useCallback(async () => {
     const current = projects.filter(project => project.id === projectId)[0];
     if (current?.voxelData.length !== voxels.length) {
       console.log("autoSaved");
-      const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+      const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
       try {
         const res = await updateVoxel(projectId, voxelData, current.imageLink, "Editing", current.prompt);
         updateProject(projectId, { voxelData: voxelData, status: "Editing", lastModified: new Date().toISOString() });
@@ -324,10 +324,10 @@ const Views: React.FC = () => {
     <>
       {
         viewMode === 'voxel'
-        ?
-        <VoxelsView voxels={voxels} />
-        :
-        <MeshView mesh={mesh} />
+          ?
+          <VoxelsView voxels={voxels} />
+          :
+          <MeshView mesh={mesh} />
       }
     </>
   )

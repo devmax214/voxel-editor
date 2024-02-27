@@ -232,7 +232,7 @@ const SceneBackground: React.FC = () => {
   const { scene } = useThree();
 
   useEffect(() => {
-    scene.background = new THREE.Color('grey');
+    scene.background = new THREE.Color('lightgrey');
   }, [scene]);
 
   return null;
@@ -251,42 +251,44 @@ const Views: React.FC = () => {
   const save = useCallback(async (e: KeyboardEvent) => {
     if (e.code === "Backslash" && user) {
       e.preventDefault();
-      gl.domElement.toBlob(async (blob) => {
-        if (blob) {
-          try {
-            setLoading(true);
-            const storage = getStorage();
-            const storageRef = ref(storage, `${projectId}/icon.png`);
-            const snapshot = await uploadBytes(storageRef, blob);
-            const iconUrl = await getDownloadURL(storageRef);
-            
-            const current = projects.filter(project => project.id === projectId)[0];
-            console.log("saved", current);
-            const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
-            if (current.voxelData.length === 0) {
-                const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
-            } else {
-                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
-                updateProject(projectId, { status: "Editing",voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+      if (viewMode === 'voxel') {
+        gl.domElement.toBlob(async (blob) => {
+          if (blob) {
+            try {
+              setLoading(true);
+              const storage = getStorage();
+              const storageRef = ref(storage, `${projectId}/icon.png`);
+              const snapshot = await uploadBytes(storageRef, blob);
+              const iconUrl = await getDownloadURL(storageRef);
+              
+              const current = projects.filter(project => project.id === projectId)[0];
+              console.log("saved", current);
+              const voxelData = voxels.map(voxel => ({x: voxel.x, y: voxel.y, z: voxel.z}));
+              if (current.voxelData.length === 0) {
+                  const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
+                  updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              } else {
+                  const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
+                  updateProject(projectId, { status: "Editing",voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+              }
+              toast({
+                  title: 'Success',
+                  description: "You saved voxel data successfully.",
+                  status: 'success',
+                  position: 'top',
+                  duration: 3000,
+                  isClosable: true,
+              });
+              setLoading(false);
+            } catch (error) {
+              setLoading(false);
             }
-            toast({
-                title: 'Success',
-                description: "You saved voxel data successfully.",
-                status: 'success',
-                position: 'top',
-                duration: 3000,
-                isClosable: true,
-            });
-            setLoading(false);
-          } catch (error) {
-            setLoading(false);
           }
-        }
-      }, 'image/png');
+        }, 'image/png');
+      }
     }
   },
-  [gl, user, projectId, projects, setLoading, toast, updateProject, voxels]
+  [gl, user, projectId, projects, setLoading, toast, updateProject, voxels, viewMode]
   );
 
   const autoSave = useCallback(async () => {

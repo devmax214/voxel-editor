@@ -1,8 +1,8 @@
 'use client'
 
-import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo, Component } from "react";
+import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF, SoftShadows } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -222,8 +222,9 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         position={[0, -0.6, 0]}
         args={[100, 100]}
       >
-        <meshStandardMaterial attach="material" color="grey" />
+        <shadowMaterial transparent opacity={0.5} />
       </Plane>
+      <SoftShadows size={25} samples={10} />
     </group>
     :
     <group></group>
@@ -344,21 +345,13 @@ const Scene: React.FC = () => {
           frameloop="demand"
           gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance' }}
         >
-          {/* <Axes /> */}
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
           <PerspectiveCamera makeDefault position={[0, 3, 3]} />
           <ambientLight intensity={1} />
-          <directionalLight
-            rotation={[Math.PI * 3 / 2, 0, 0]}
-            castShadow
-            position={[10, 20, 10]}
-            intensity={2}
-            shadow-mapSize-width={1024}
-            shadow-mapSize-height={1024}
-            shadow-camera-near={0.5}
-            shadow-camera-far={500}
-          />
+          <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
+            <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
+          </directionalLight>
           <Suspense fallback={null}>
             <Views />
           </Suspense>

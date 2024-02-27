@@ -218,8 +218,8 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         material={material}
       />
       <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
-        <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[10, 10, 10]} />
-        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[10, 5, 5]} />
+        <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
+        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
       </AccumulativeShadows>
       <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
     </group>
@@ -338,7 +338,6 @@ const Scene: React.FC = () => {
       <div className="w-full h-full">
         <Canvas
           shadows="soft"
-          // shadows
           flat={true}
           dpr={[1, 1]}
           frameloop="demand"

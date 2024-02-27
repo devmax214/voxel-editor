@@ -216,9 +216,9 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         geometry={geometry}
         material={material}
       />
-      <AccumulativeShadows temporal frames={60} alphaTest={0.85} scale={10} position={[0, -0.63, 0]}>
+      <AccumulativeShadows temporal frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
         <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[10, 10, 10]} />
-        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[10, 10, 5]} />
+        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[10, 5, 5]} />
       </AccumulativeShadows>
       {/* <Plane
         receiveShadow

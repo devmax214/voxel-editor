@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
+import { Canvas, useThree, ThreeEvent, useLoader, useFrame } from "@react-three/fiber";
 import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF, SoftShadows, AccumulativeShadows, RandomizedLight, ContactShadows } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
@@ -142,6 +142,7 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
         onPointerLeave={onOut}
         onClick={onClick}
       />
+      <OrbitControls />
     </group>
   );
 };
@@ -216,19 +217,11 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         geometry={geometry}
         material={material}
       />
-      <AccumulativeShadows temporal frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
+      <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
         <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[10, 10, 10]} />
         <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[10, 5, 5]} />
       </AccumulativeShadows>
-      {/* <Plane
-        receiveShadow
-        rotation={[Math.PI * 3 / 2, 0, 0]}
-        position={[0, -0.6, 0]}
-        args={[100, 100]}
-      >
-        <shadowMaterial transparent opacity={0.5} />
-      </Plane> */}
-      {/* <SoftShadows size={25} samples={10} /> */}
+      <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
     </group>
     :
     <group></group>
@@ -334,8 +327,6 @@ const Views: React.FC = () => {
 }
 
 const Scene: React.FC = () => {
-  const controlsRef = useRef(null);
-
   return (
     <div className="canvas">
       <InfoBox />
@@ -361,11 +352,7 @@ const Scene: React.FC = () => {
           <Suspense fallback={null}>
             <Views />
           </Suspense>
-          <OrbitControls ref={controlsRef} />
-          {/* <AccumulativeShadows temporal position={[0, -0.6, 0]} resolution={1024} frames={100} alphaTest={0.68} colorBlend={1.5} opacity={1} scale={8}>
-            <RandomizedLight radius={5} ambient={0.7} position={[10, 15, 10]} bias={0.001} />
-          </AccumulativeShadows> */}
-          {/* <ContactShadows position={[0, -0.6, 0]} opacity={1} scale={10} blur={1} far={10} resolution={256} color="#000000" /> */}
+          {/* <OrbitControls /> */}
         </Canvas>
       </div>
     </div>

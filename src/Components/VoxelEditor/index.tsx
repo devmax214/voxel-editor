@@ -1,8 +1,8 @@
 'use client'
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
-import { Canvas, useThree, ThreeEvent, useLoader, useFrame } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, Plane, useGLTF, SoftShadows, AccumulativeShadows, RandomizedLight, ContactShadows } from "@react-three/drei";
+import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
+import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -19,6 +19,7 @@ import { useToast } from "@chakra-ui/react";
 import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
+import { cropToSquare } from "utils/utils";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -256,9 +257,10 @@ const Views: React.FC = () => {
           if (blob) {
             try {
               setLoading(true);
+              const croppedBlob = await cropToSquare(blob);
               const storage = getStorage();
               const storageRef = ref(storage, `${projectId}/icon.png`);
-              const snapshot = await uploadBytes(storageRef, blob);
+              const snapshot = await uploadBytes(storageRef, croppedBlob);
               const iconUrl = await getDownloadURL(storageRef);
 
               const current = projects.filter(project => project.id === projectId)[0];

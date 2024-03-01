@@ -2,7 +2,7 @@
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight, ContactShadows } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -167,30 +167,38 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
 
   const modelFile = current?.meshLink;
 
-  const { nodes, materials } = useGLTF(modelFile || "/models/motor.glb");
+  // const { nodes, materials } = useGLTF("/models/model1.glb");
+  // // if (!mesh)
+  // //   return null;
+  // const material = materials.default;
+  // let geometry = (nodes.object as THREE.Mesh).geometry as THREE.BufferGeometry;
+  // geometry.deleteAttribute("normal");
+  // geometry = mergeVertices(geometry);
+  // geometry.computeVertexNormals();
+  // material.side = THREE.DoubleSide;
 
-  // if (!mesh)
-  //   return null;
-  const material = materials.default;
-  let geometry = (nodes.model as THREE.Mesh).geometry;
-  delete geometry.attributes.normal;
+  const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
+  // Apply these materials to the subsequent OBJ loader
+  const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
+    if (model) {
+      model.setMaterials(materials);
+
+    }
+    return model;
+  });
+
+  const metallicnessMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_metallic.jpg");
+  const roughnessMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_roughness.jpg");
+  const textureMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_kd.jpg");
+
+  let objMesh = obj.children[0] as THREE.Mesh;
+  let geometry = objMesh.geometry;
+  geometry.deleteAttribute("normal");
   geometry = mergeVertices(geometry);
   geometry.computeVertexNormals();
 
-  // const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
-  // Apply these materials to the subsequent OBJ loader
-  // const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
-  //   if (model) {
-  //     model.setMaterials(materials);
-
-  //   }
-  //   return model;
-  // });
-
-  // let geometry = (nodes.model as THREE.Mesh).geometry;
-  // delete geometry.attributes.normal;
-  // geometry = mergeVertices(geometry);
-  // geometry.computeVertexNormals();
+  const bounds = new THREE.Box3().setFromObject(obj);
+  // const bounds = new THREE.Box3().setFromObject(nodes.object as THREE.Mesh);
 
   return (show ?
     // <mesh
@@ -199,29 +207,31 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
     //   material={Material}
     // />
     <group>
-      {/* <mesh
+      <mesh
         castShadow
         receiveShadow
         rotation={[Math.PI * 3 / 2, 0, 0]}
-        geometry={obj.children[0].geometry}
+        geometry={geometry}
       >
         <meshPhysicalMaterial
+          side={THREE.DoubleSide}
           attach={'material'}
-          map={obj.children[0].material.map}
-          roughnessMap={obj.children[0].material.roughnessMap}
-          // normalMap={obj.children[0].material.normalMap}
-          metalnessMap={obj.children[0].material.metalnessMap}
+          map={textureMap}
+          roughnessMap={roughnessMap}
+          metalnessMap={metallicnessMap}
         />
-      </mesh> */}
-      <mesh
+      </mesh>
+      {/* <mesh
         castShadow
+        rotation={[Math.PI * 3 / 2, 0, 0]}
         geometry={geometry}
         material={material}
-      />
-      <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, -0.63, 0]}>
+      /> */}
+      {/* <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, bounds.min.z, 0]}>
         <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
         <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
-      </AccumulativeShadows>
+      </AccumulativeShadows> */}
+      <ContactShadows scale={10} blur={1} far={10} resolution={256} position={[0, bounds.min.z, 0]} />
       <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
     </group>
     :

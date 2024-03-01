@@ -58,10 +58,10 @@ const CardView = ({
           <p className="text-lg">{name}</p>
         </Flex>
         <div className="flex gap-x-2">
-          <Button variant={'outline'} size={'sm'} colorScheme='blue' onClick={handleDuplicate}>
+          <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={status === 'Generating'} onClick={handleDuplicate}>
             Duplicate
           </Button>
-          <Button variant={'solid'} size={'sm'} colorScheme='pink' onClick={onOpen}>
+          <Button variant={'solid'} size={'sm'} colorScheme='pink' isDisabled={status === 'Generating'} onClick={onOpen}>
             Delete
           </Button>
         </div>

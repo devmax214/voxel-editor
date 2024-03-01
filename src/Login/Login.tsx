@@ -242,7 +242,7 @@ const Login = () => {
               Sign up
             </Link>
           </Text> */}
-          <Box position='relative' py='2'>
+          {/* <Box position='relative' py='2'>
             <Divider borderColor="yellow.800" />
             <AbsoluteCenter bg='#ffbd59' px='4' fontSize={14}>
               OR
@@ -259,7 +259,7 @@ const Login = () => {
             onClick={loginWithGoogle}
           >
             Continue with Google
-          </Button>
+          </Button> */}
         </Stack>
       </form>
     </Flex>

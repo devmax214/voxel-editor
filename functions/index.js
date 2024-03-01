@@ -418,12 +418,61 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'POST'){
       try {
-        const { id, status } = req.body;
+        const { id, status, output } = req.body;
         const snapShot = await db.collection("projects").where("meshReqId", "==", id).limit(1).get();
         const projectRef = snapShot.empty ? null : snapShot.docs[0].ref;
         const projectData = snapShot.empty ? null : snapShot.docs[0].data();
-  
+        
         if (projectRef) {
+          const filesData = [
+            {
+              filename: "model.obj",
+              base64: output.obj
+            },
+            {
+              filename: "model.mtl",
+              base64: output.mtl
+            },
+            {
+              filename: "texture_kd.jpg",
+              base64: output.albedo
+            },
+            {
+              filename: "texture_metallic.jpg",
+              base64: output.metallic
+            },
+            {
+              filename: "texture_roughness.jpg",
+              base64: output.roughness
+            }
+          ];
+  
+          const uploadPromises = filesData.map((fileData) => {
+            const { filename, base64 } = fileData;
+            
+            if (!filename || !base64) {
+              throw new Error('Missing filename or base64 data');
+            }
+            
+            // Decode the base64 string to binary data
+            const buffer = Buffer.from(base64, 'base64');
+            
+            // Create a new blob in the bucket and upload the file data.
+            const blob = storage.file(`${projectRef.id}/${filename}`);
+            const blobStream = blob.createWriteStream({
+              metadata: {
+                contentType: 'auto', // Firebase can auto-detect content type if not specified
+              },
+            });
+        
+            return new Promise((resolve, reject) => {
+              blobStream.on('error', (err) => reject(err));
+              blobStream.on('finish', () => resolve({ filename }));
+              blobStream.end(buffer);
+            });
+          });
+  
+          await Promise.all(uploadPromises);
           await projectRef.update({
             status: "Completed",
             meshLink: "/models/motor.glb"

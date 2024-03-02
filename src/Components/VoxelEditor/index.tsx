@@ -2,7 +2,7 @@
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight, ContactShadows } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight, ContactShadows, Html } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -14,12 +14,13 @@ import InfoBox from "./InfoBox";
 import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
-import { useToast } from "@chakra-ui/react";
+import { Spinner, useToast } from "@chakra-ui/react";
 // import { voxelCreated, updateVoxel } from "utils/api";
 import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
-import { cropToSquare } from "utils/utils";
+import { cropToSquare, get3DUrls } from "utils/utils";
+import { progress } from "framer-motion";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -158,10 +159,22 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   const projectId = params?.projectId as string;
   const { projects } = useProjectContext();
   const current = projects.filter(project => project.id === projectId)[0];
+  const [urls, setUrls] = useState({
+    obj: '',
+    mtl: '',
+    albedo: '',
+    metallic: '',
+    roughness: ''
+  });
 
   useEffect(() => {
     if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshLink) {
-      setShow(true);
+      get3DUrls(projectId)
+      .then(urls => {
+        setUrls(urls);
+        setShow(true);
+      })
+      .catch(err => console.log(err));
     }
   }, [current]);
 
@@ -177,19 +190,23 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   // geometry.computeVertexNormals();
   // material.side = THREE.DoubleSide;
 
-  const materials = useLoader(MTLLoader, "/models/motor-new/model.mtl");
-  // Apply these materials to the subsequent OBJ loader
-  const obj = useLoader(OBJLoader, "/models/motor-new/model.obj", (model) => {
-    if (model) {
-      model.setMaterials(materials);
-
+  const materials = useLoader(MTLLoader, urls.mtl);
+  const obj = useLoader(
+    OBJLoader,
+    urls.obj,
+    (model) => {
+      if (model) {
+        model.setMaterials(materials);
+      }
+      return model;
     }
-    return model;
-  });
+  );
 
-  const metallicnessMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_metallic.jpg");
-  const roughnessMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_roughness.jpg");
-  const textureMap = useLoader(THREE.TextureLoader, "/models/motor-new/texture_kd.jpg");
+  const metallicnessMap = useLoader(THREE.TextureLoader, urls.metallic);
+  const roughnessMap = useLoader(THREE.TextureLoader, urls.roughness);
+  const textureMap = useLoader(THREE.TextureLoader, urls.albedo);
+
+  if (!obj.children) return null;
 
   let objMesh = obj.children[0] as THREE.Mesh;
   let geometry = objMesh.geometry;
@@ -200,7 +217,7 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   const bounds = new THREE.Box3().setFromObject(obj);
   // const bounds = new THREE.Box3().setFromObject(nodes.object as THREE.Mesh);
 
-  return (show ?
+  return ((show && urls.obj) ?
     // <mesh
     //   rotation={[Math.PI * 3 / 2, 0, 0]}
     //   geometry={mesh}
@@ -362,10 +379,9 @@ const Scene: React.FC = () => {
           <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
           </directionalLight>
-          <Suspense fallback={null}>
+          <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
             <Views />
           </Suspense>
-          {/* <OrbitControls /> */}
         </Canvas>
       </div>
     </div>

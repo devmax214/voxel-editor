@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
-import ThreeMinifierPlugin from '@yushijinhun/three-minifier-webpack'
+import ThreeMinifierPlugin from '@yushijinhun/three-minifier-webpack';
+
+export function middleware(request) {
+  const response = NextResponse.next()
+
+  response.headers.set('Access-Control-Allow-Origin', '*')
+
+  return response 
+}
 
 const nextConfig = {
   output: 'standalone',

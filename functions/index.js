@@ -459,6 +459,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
             
             // Create a new blob in the bucket and upload the file data.
             const blob = storage.file(`${projectRef.id}/${filename}`);
+            blob.save(buffer);
             const blobStream = blob.createWriteStream({
               metadata: {
                 contentType: 'auto', // Firebase can auto-detect content type if not specified
@@ -467,12 +468,13 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
         
             return new Promise((resolve, reject) => {
               blobStream.on('error', (err) => reject(err));
-              blobStream.on('finish', () => resolve({ filename }));
+              blobStream.on('finish', () => resolve(filename));
               blobStream.end(buffer);
             });
           });
   
-          await Promise.all(uploadPromises);
+          const files = await Promise.all(uploadPromises);
+
           await projectRef.update({
             status: "Completed",
             meshLink: "/models/motor.glb"

@@ -1,3 +1,22 @@
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+
+export const get3DUrls = async (projectId: string) => {
+  const storage = getStorage();
+  const objUrl = await getDownloadURL(ref(storage, `${projectId}/model.obj`));
+  const mtlUrl = await getDownloadURL(ref(storage, `${projectId}/model.mtl`));
+  const albedoUrl = await getDownloadURL(ref(storage, `${projectId}/texture_kd.jpg`));
+  const metallicUrl = await getDownloadURL(ref(storage, `${projectId}/texture_metallic.jpg`));
+  const roughnessUrl = await getDownloadURL(ref(storage, `${projectId}/texture_roughness.jpg`));
+
+  return {
+    obj: objUrl,
+    mtl: mtlUrl,
+    albedo: albedoUrl,
+    metallic: metallicUrl,
+    roughness: roughnessUrl
+  };
+}
+
 export const cropToSquare = async (blob: Blob) => {
   return new Promise((resolve: (value: Blob) => void, reject) => {
     const image = new Image();

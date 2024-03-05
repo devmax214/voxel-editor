@@ -25,7 +25,7 @@ export const ProjectContextProvider = (props: React.PropsWithChildren) => {
   const [projects, setProjects] = React.useState<Project[]>([]);
 
   const addProject = (project: Project) => {
-    setProjects([...projects, project]);
+    setProjects([project, ...projects]);
   };
 
   const deleteProject = (projectId: string) => {

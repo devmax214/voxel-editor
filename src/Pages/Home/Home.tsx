@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import CardView from '@/Components/Elements/Card/CardView';
-import { Text, Grid, GridItem, Progress, Flex } from '@chakra-ui/react';
+import { Text, Grid, GridItem, Progress, Flex, Heading } from '@chakra-ui/react';
 import { Container } from '@ui/Container/Container';
 import TemplateButton from '@/Components/Elements/Buttons/TemplateButton';
 import { Box } from '@ui/Box/Box';
@@ -49,6 +49,15 @@ const Home = () => {
   return (
     <>
       <Container w={'full'} maxW='8xl' my={4}>
+        <Heading mb={4} as={'h2'} size={'2xl'} noOfLines={1}>Enlighten Asset (Alpha)</Heading>
+        <Grid mb={4} templateColumns='repeat(12, 1fr)' gap={4} w={'100%'} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8}>
+          <GridItem colSpan={4} p={2}>
+            <Text fontSize='md'>Create New</Text>
+            <Flex mt={3}>
+              <TemplateButton text='Create New' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} onClick={handleCreateNew} />
+            </Flex>
+          </GridItem>
+        </Grid>
         <Grid templateColumns='repeat(2, 1fr)' gap={4} w={'100%'}>
           <GridItem colSpan={1} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8} p={2}>
             <Text fontSize='md'>3D Project in Progress</Text>
@@ -68,37 +77,6 @@ const Home = () => {
             </Flex>
 
           </GridItem>
-        </Grid>
-      </Container>
-
-      <Container w={'full'} maxW='8xl' my={4}>
-        <Grid templateColumns='repeat(12, 1fr)' gap={4} w={'100%'} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8}>
-          <GridItem colSpan={4} p={2}>
-            <Text fontSize='md'>Create New</Text>
-            <Flex mt={3}>
-              <TemplateButton text='Create New' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} onClick={handleCreateNew} />
-            </Flex>
-          </GridItem>
-          {/* <GridItem colSpan={8} p={2} ml={-12}>
-            <Text fontSize='md'>Create from my template</Text>
-            <Flex mt={3} gap={2}>
-              <TemplateButton text='Template 1' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 2' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 3' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 4' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-            </Flex>
-          </GridItem>
-          <GridItem colSpan={12} p={2}>
-            <Text fontSize='md'>Create from popular template</Text>
-            <Flex mt={3} gap={2}>
-              <TemplateButton text='Template 1' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 2' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 3' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 4' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 5' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-              <TemplateButton text='Template 6' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} />
-            </Flex>
-          </GridItem> */}
         </Grid>
       </Container>
 

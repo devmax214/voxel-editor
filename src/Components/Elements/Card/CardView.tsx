@@ -21,7 +21,7 @@ const CardView = ({
 } : {
   project: Project
 }) => {
-  const { id, progress, status, uid, voxelData, meshLink, imageLink, name } = project;
+  const { id, progress, status, uid, voxelData, meshLink, imageLink, name, lastModified } = project;
   const { addProject, deleteProject } = useProjectContext();
   const { setLoading } = useBasicStore();
 
@@ -45,17 +45,25 @@ const CardView = ({
 
   return (
     <>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center gap-x-2">
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
-            <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={70} width={70} fetchPriority='high' />
+            <Box width={100} height={100}>
+              <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
+            </Box>
           </Link>
-          {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2">Not Started</p>}
-          {status === 'Generating' && <div className="w-[100px] px-2 text-center">
-            <Spinner />
-          </div>}
-          {status === 'Completed' && <p className="w-[110px] px-2">Complete</p>}
-          <p className="text-lg">{name}</p>
+          <Box width={110}>
+            {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2 text-center">Not Started</p>}
+            {status === 'Generating' && <div className="w-[110px] px-2 text-center">
+              <Spinner />
+            </div>}
+            {status === 'Completed' && <p className="w-[110px] px-2 text-center">Complete</p>}
+            {status === 'Failed' && <p className="w-[110px] px-2 text-center">Failed</p>}
+          </Box>
+          <div>
+            <Text noOfLines={2} className="text-lg">{name}</Text>
+            <p className="text-xs">{new Date(lastModified).toLocaleString()}</p>
+          </div>
         </Flex>
         <div className="flex gap-x-2">
           <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={status === 'Generating'} onClick={handleDuplicate}>

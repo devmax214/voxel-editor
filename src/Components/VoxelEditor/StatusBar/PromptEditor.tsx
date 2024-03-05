@@ -61,12 +61,14 @@ const PromptEditor = () => {
 
   useEffect(() => {
     if (current){
+      if (current.status === 'Completed') setViewMode('mesh');
+      else setViewMode('voxel');
       setPrompt(current.prompt);
       if (current.status === 'Editing' && current.meshLink) {
         outDated.onOpen();
       }
     }
-  }, [current]);
+  }, [current, setViewMode]);
 
   useEffect(() => {
     setVoxels(voxelData);
@@ -103,8 +105,8 @@ const PromptEditor = () => {
         setMeshReqStatus(res.status);
         if (res.status === 'IN_QUEUE' || res.status === 'IN_PROGRESS') {
           setLoading(true);
-          await delay(3000);
           checkReq();
+          await delay(3000);
         }
         else if (res.status === 'COMPLETED') {
           setLoading(false);
@@ -124,10 +126,10 @@ const PromptEditor = () => {
   const handleGenerate = async () => {
     try {
       const res = await requestMesh(propmt);
-      await saveVoxelReqId(projectId, res.id);
       if (res) {
-        window.localStorage.setItem(projectId, res.id);
         setReqId(res.id);
+        window.localStorage.setItem(projectId, res.id);
+        await saveVoxelReqId(projectId, res.id);
         if (current.name === 'undefined') {
           const res = await changeProjectName(projectId, propmt);
           updateProject(projectId, { name: res.name, prompt: propmt });
@@ -164,14 +166,16 @@ const PromptEditor = () => {
   }, [projectId, isGenerating, delay, setViewMode, updateProject, updateUserInfo]);
 
   const handleGenerateModel = async () => {
+    const voxelData = generatePointCloud(voxels, voxelSize);
     try {
+      setIsGenerating(true);
       await startStage2(projectId, current?.prompt);
       updateUserInfo();
       outDated.onClose();
       updateProject(projectId, {status: "Generating"});
       window.sessionStorage.setItem(projectId, "true");
-      setIsGenerating(true);
     } catch (error: any) {
+      setIsGenerating(false);
       console.log(error);
       toast({
         title: 'Error',
@@ -235,7 +239,7 @@ const PromptEditor = () => {
               {viewMode === 'voxel' ? 'Override voxel' : 'Generate Model'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              {viewMode === 'voxel' ? 'Are you sure? This will override voxel in the editor.' : 'Are you sure? This process can take approximately 2 hours and 120 credits for mesh generation. You can leave page and come back later.'}
+              {viewMode === 'voxel' ? 'Are you sure? This will override voxel in the editor.' : 'Are you sure? This process can take approximately 60 minutes and 60 credits for mesh generation. You can leave page and come back later.'}
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={alert.onClose}>

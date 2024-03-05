@@ -120,9 +120,9 @@ const FileNamgeChanger = () => {
                 <Input className="w-48 text-black" value={name} onChange={e => setName(e.target.value)} />
                 :
                 <>
-                    <div className="w-48 text-center">
-                        <p className="text-black">{current?.name || "undefined"}</p>
-                        <p className="text-black text-sm">{new Date(current?.lastModified).toLocaleString()}</p>
+                    <div className="w-60 text-center">
+                        <Text className="text-lg" noOfLines={2}>{current?.name || "undefined"}</Text>
+                        <p className="text-black text-xs">{new Date(current?.lastModified).toLocaleString()}</p>
                     </div>
                 </>
             }

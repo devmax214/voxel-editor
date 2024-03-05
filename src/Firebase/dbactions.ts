@@ -30,7 +30,7 @@ export const getUserInfo = async (uid: string) => {
 
 export const getProjectsByUid = async (uid: string) => {
   try {
-    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("name"), orderBy("lastModified", "desc"));
+    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("lastModified", "desc"), orderBy("name"));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];

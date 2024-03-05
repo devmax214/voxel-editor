@@ -248,7 +248,7 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
         <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
       </AccumulativeShadows> */}
-      <ContactShadows scale={10} blur={1} far={10} resolution={256} position={[0, bounds.min.z, 0]} />
+      <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
       <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
     </group>
     :
@@ -374,7 +374,7 @@ const Scene: React.FC = () => {
         >
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 3, 3]} />
+          <PerspectiveCamera makeDefault position={[0, 1.5, 1.5]} />
           <ambientLight intensity={0.5 * Math.PI} />
           <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />

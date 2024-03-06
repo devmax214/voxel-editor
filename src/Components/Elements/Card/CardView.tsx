@@ -49,7 +49,7 @@ const CardView = ({
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
             <Box width={100} height={100}>
-              <Image src={imageLink ? imageLink: "default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
+              <Image src={imageLink ? imageLink: "/default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
             </Box>
           </Link>
           <Box width={110}>

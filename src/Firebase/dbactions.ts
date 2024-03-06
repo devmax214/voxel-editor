@@ -11,6 +11,11 @@ import {
   deleteDoc,
   orderBy
 } from "firebase/firestore";
+import {
+  ref,
+  getStorage,
+  getDownloadURL
+} from "firebase/storage";
 import { app } from "./config";
 import { Voxel } from "utils/types";
 
@@ -56,6 +61,11 @@ export const createProject = async (uid: string) => {
       imageLink: "",
       meshReqId: "",
       meshLink: "",
+      objUrl: "",
+      mtlUrl: "",
+      albedoUrl: "",
+      metallicUrl: "",
+      roughnessUrl: "",
       lastModified: new Date().toISOString(),
       prompt: ""
     };
@@ -190,6 +200,51 @@ export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
     return {
       message: "Successfully saved Voxel Request Id"
     }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+export const update3DUrls = async (projectId: string) => {
+  const storage = getStorage();
+  const objUrl = await getDownloadURL(ref(storage, `${projectId}/model.obj`));
+  const mtlUrl = await getDownloadURL(ref(storage, `${projectId}/model.mtl`));
+  const albedoUrl = await getDownloadURL(ref(storage, `${projectId}/texture_kd.jpg`));
+  const metallicUrl = await getDownloadURL(ref(storage, `${projectId}/texture_metallic.jpg`));
+  const roughnessUrl = await getDownloadURL(ref(storage, `${projectId}/texture_roughness.jpg`));
+  // const meshLink = await getDownloadURL(ref(storage, `${projectId}/mesh.png`));
+
+  const projectRef = doc(db, 'projects', projectId);
+  await updateDoc(projectRef, {
+    objUrl,
+    mtlUrl,
+    albedoUrl,
+    metallicUrl,
+    roughnessUrl,
+    // meshLink
+  });
+
+  return {
+    objUrl,
+    mtlUrl,
+    albedoUrl,
+    metallicUrl,
+    roughnessUrl,
+    // meshLink
+  };
+}
+
+export const getCompletedProjects = async () => {
+  try {
+    const q = query(collection(db, "projects"), where("status", "==", "Completed"));
+    
+    const querySnapshot = await getDocs(q);
+    let response:any = [];
+    querySnapshot.forEach((doc) => {
+      response.push({...doc.data(), id: doc.id});
+    });
+    return response;
   } catch (error) {
     console.log(error);
     return error;

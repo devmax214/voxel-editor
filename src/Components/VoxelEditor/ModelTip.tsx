@@ -13,7 +13,7 @@ const ModelTip = () => {
   const current = projects.filter(project => project.id === projectId)[0];
 
   useEffect(() => {
-    if (!current?.meshLink && current?.status !== 'Generating') {
+    if (!current?.objUrl && current?.status !== 'Generating') {
       setShow(true);
     }
     else setShow(false);

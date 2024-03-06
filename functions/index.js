@@ -173,7 +173,7 @@ exports.voxelCreated = functions.https.onRequest(async (req, res) => {
   })
 })
 
-const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/gg3lo31p6vvlb0";
+const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/1qao7hbqaekjpm";
 const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
 const FIREBASE_CLOUD_BASEURL = "https://us-central1-enlighten-3d-backend.cloudfunctions.net";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -182,7 +182,7 @@ const DEFAULT_REQ_CREDIT = 60;
 exports.startStage2 = functions.https.onRequest(async (req,res) => {
   cors(req, res, async ()=>{
     if (req.method === 'POST') {
-      const { projectId, prompt,  } = req.body;
+      const { projectId, prompt, vertices } = req.body;
       
       try {
         const projectRef = db.collection("projects").doc(projectId);
@@ -217,12 +217,10 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
           },
           body: JSON.stringify({
             input: {
-              prompt: prompt
+              prompt: prompt,
+              vertices: vertices
             },
             webhook: `${FIREBASE_CLOUD_BASEURL}/meshGenerated`,
-            policy: {
-              ttl: 4 * 60 * 60 * 1000,
-            }
           })
         });
 
@@ -429,42 +427,36 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
         const userData = (await userRef.get()).data();
         
         if (projectRef) {
-          if (status === "COMPLETED") {
+          if (status === "COMPLETED" && projectData.status === "Generating") {
             const filesData = [
               {
-                field: "obj",
                 filename: "model.obj",
                 base64: output.obj
               },
               {
-                field: "mtl",
                 filename: "model.mtl",
                 base64: output.mtl
               },
               {
-                field: "albedo",
                 filename: "texture_kd.jpg",
                 base64: output.albedo
               },
               {
-                field: "metallic",
                 filename: "texture_metallic.jpg",
                 base64: output.metallic
               },
               {
-                field: "roughness",
                 filename: "texture_roughness.jpg",
                 base64: output.roughness
               },
-              {
-                field: "meshLink",
-                filename: "mesh.png",
-                base64: output.screenshot
-              }
+              // {
+              //   filename: "mesh.png",
+              //   base64: output.screenshot
+              // }
             ];
     
             const uploadPromises = filesData.map(async (fileData) => {
-              const { field, filename, base64 } = fileData;
+              const { filename, base64 } = fileData;
               
               if (!filename || !base64) {
                 throw new Error('Missing filename or base64 data');
@@ -475,10 +467,6 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
               
               // Create a new blob in the bucket and upload the file data.
               const blob = storage.file(`${projectRef.id}/${filename}`);
-              const downloadURL = await blob.getSignedUrl({
-                action: "read",
-                expires: null
-              });
               blob.save(buffer);
               const blobStream = blob.createWriteStream({
                 metadata: {
@@ -488,20 +476,15 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
           
               return new Promise((resolve, reject) => {
                 blobStream.on('error', (err) => reject(err));
-                blobStream.on('finish', () => resolve({[field]: downloadURL[0]}));
+                blobStream.on('finish', () => resolve(filename));
                 blobStream.end(buffer);
               });
             });
     
-            const uploadedFiles = await Promise.all(uploadPromises);
+            await Promise.all(uploadPromises);
   
             await projectRef.update({
               status: "Completed",
-              ...uploadedFiles[0],
-              ...uploadedFiles[1],
-              ...uploadedFiles[2],
-              ...uploadedFiles[3],
-              ...uploadedFiles[4],
             });
   
             const requireCredit = Math.floor(executionTime / 60000);
@@ -513,7 +496,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   
             res.status(200).json("Job completed");
           }
-          if (status === "FAILED") {
+          if (status === "FAILED" && projectData.status === "Generating") {
             await projectRef.update({
               status: "Failed",
             });

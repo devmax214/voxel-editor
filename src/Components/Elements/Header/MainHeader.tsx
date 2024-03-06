@@ -7,7 +7,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { Box, Flex, Text, Stack, Button, Input } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
-import { useBasicStore, useThreeStore } from "@/store";
+import { useBasicStore, useCompletedProjects, useThreeStore } from "@/store";
 // import { changeProjectName } from "utils/api";
 import { changeProjectName } from "@/Firebase/dbactions";
 import { useProjectContext } from "@/contexts/projectContext";
@@ -29,6 +29,7 @@ const MainHeader = (props: GridProps) => {
                 <FileNamgeChanger />
                 <FileActionBar />
             </div>}
+            {pathName?.startsWith('/view') && <FileNameViewer />}
             {user && <div className="flex items-center gap-x-4">
                 <ProfileCard />
             </div>}
@@ -84,27 +85,35 @@ const NavBarContainer = ({ children, ...props }: { children: ReactNode }) => {
     );
 };
 
+const FileNameViewer = () => {
+    const params = useParams();
+    const projectId = params?.projectId as string;
+    const { populars } = useCompletedProjects();
+    const current = populars.filter(popular => popular.id === projectId)[0];
+
+    return (
+        <div className="flex items-center">
+            <div className="w-72 text-center">
+                <Text className="text-lg" noOfLines={2}>{current?.name || "undefined"}</Text>
+                <p className="text-black text-xs">{new Date(current?.lastModified).toLocaleString()}</p>
+            </div>
+        </div>
+    )
+}
+
 const FileNamgeChanger = () => {
     const params = useParams();
     const projectId = params?.projectId as string;
     const [editing, setEditing] = useState<boolean>(false);
     const [name, setName] = useState<string>("");
     const { setLoading } = useBasicStore();
-    // const { projectName, setProjectName } = useThreeStore();
     const { projects, updateProject } = useProjectContext();
     const current = projects.filter(project => project.id === projectId)[0];
-    
-    // useEffect(() => {
-    //     if (current) {
-    //         setName(current.name);
-    //     }
-    // }, [current]);
 
     const handleProjectName = async () => {
         if (editing) {
             setLoading(true);
             const res: any = await changeProjectName(projectId, name);
-            // setProjectName(res.name);
             updateProject(projectId, { name: res.name });
             setLoading(false);
         } else {

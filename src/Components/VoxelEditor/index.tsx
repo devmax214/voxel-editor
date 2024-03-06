@@ -14,13 +14,12 @@ import InfoBox from "./InfoBox";
 import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
-import { Spinner, useToast } from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
 // import { voxelCreated, updateVoxel } from "utils/api";
-import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
+import { voxelCreated, updateVoxel, update3DUrls } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
-import { cropToSquare, get3DUrls } from "utils/utils";
-import { progress } from "framer-motion";
+import { cropToSquare } from "utils/utils";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -168,17 +167,17 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   });
 
   useEffect(() => {
-    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshLink) {
-      get3DUrls(projectId)
-      .then(urls => {
-        setUrls(urls);
-        setShow(true);
+    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.objUrl) {
+      setUrls({
+        obj: current.objUrl,
+        mtl: current.mtlUrl,
+        albedo: current.albedoUrl,
+        metallic: current.metallicUrl,
+        roughness: current.roughnessUrl
       })
-      .catch(err => console.log(err));
+      setShow(true);
     }
   }, [current]);
-
-  const modelFile = current?.meshLink;
 
   // const { nodes, materials } = useGLTF("/models/model1.glb");
   // // if (!mesh)

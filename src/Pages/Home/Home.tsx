@@ -1,22 +1,21 @@
 'use client'
 
 import React from 'react';
+import Link from "next/link";
 import { useRouter } from 'next/navigation';
 import CardView from '@/Components/Elements/Card/CardView';
-import { Text, Grid, GridItem, Progress, Flex, Heading } from '@chakra-ui/react';
-import { Container } from '@ui/Container/Container';
+import { Text, Grid, GridItem, Box, Flex, Heading, Container, Image } from '@chakra-ui/react';
 import TemplateButton from '@/Components/Elements/Buttons/TemplateButton';
-import { Box } from '@ui/Box/Box';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useAuthContext } from '@/contexts/authContext';
 // import { createProject } from 'utils/api';
 import { createProject } from '@/Firebase/dbactions';
-import { useBasicStore } from '@/store';
-import { Project } from 'utils/types';
+import { useBasicStore, useCompletedProjects } from '@/store';
 
 const Home = () => {
   const { user } = useAuthContext();
   const { projects, addProject } = useProjectContext();
+  const { populars } = useCompletedProjects();
   const { setLoading } = useBasicStore();
   const router = useRouter();
 
@@ -37,6 +36,11 @@ const Home = () => {
         voxelData: [],
         meshReqId: '',
         meshLink: '',
+        objUrl: '',
+        mtlUrl: '',
+        albedoUrl: '',
+        metallicUrl: '',
+        roughnessUrl: '',
         imageLink: '',
         lastModified: new Date().toISOString(),
         prompt: "",
@@ -80,26 +84,20 @@ const Home = () => {
         </Grid>
       </Container>
 
-      {/* <Container w={'full'} maxW='6xl' my={4}>
-        <Grid templateColumns='repeat(12, 1fr)' gap={4} w={'100%'} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8}>
-          <GridItem colSpan={6} p={2}>
-            <Text fontSize='lg'>POST / NEWS</Text>
-            <Flex flexDir={'column'}>
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-            </Flex>
-          </GridItem>
-          <GridItem colSpan={6} p={2}>
-            <Text fontSize='lg'>DOCUMENTATION</Text>
-            <Flex flexDir={'column'}>
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-              <Box mt={3} w={'full'} border={1} borderStyle={'solid'} borderColor={'gray.500'} borderRadius={8} h={20} />
-            </Flex>
-          </GridItem>
-        </Grid>
-      </Container> */}
+      <Container w={'full'} maxW='8xl' my={4}>
+        <Box border={1} borderStyle={'solid'} p={2} borderColor={'dark'} borderRadius={8}>
+          <Text fontSize='md'>Popular Assets</Text>
+          <Grid templateColumns='repeat(12, 1fr)' p={2} gap={4} w={'100%'}>
+            {populars.map((popular, index) => (
+              <GridItem key={`popular_${index}`}>
+                <Link href={`/view/${popular.id}`}>
+                  <Image src={popular.imageLink || "/default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
+                </Link>
+              </GridItem>
+            ))}
+          </Grid>
+        </Box>
+      </Container>
     </>
   )
 }

@@ -22,7 +22,7 @@ import { Input } from '@chakra-ui/input';
 import { Button, Spinner } from '@chakra-ui/react';
 import { changeProjectName, startStage2 } from 'utils/api';
 import { useProjectContext } from "@/contexts/projectContext";
-import { checkStatus, getUserInfo, saveVoxelReqId } from '@/Firebase/dbactions';
+import { checkStatus, getUserInfo, saveVoxelReqId, update3DUrls } from '@/Firebase/dbactions';
 import { generatePointCloud } from 'utils/voxel';
 import { useAuthContext } from '@/contexts/authContext';
 
@@ -54,17 +54,19 @@ const PromptEditor = () => {
       setReqId(savedId);
     }
     const savedGenerating = window.sessionStorage.getItem(projectId);
-    if (savedGenerating) {
+    if (current?.status === 'Generating' && savedGenerating) {
       setIsGenerating(true);
+    } else {
+      window.sessionStorage.removeItem(projectId);
     }
-  }, [projectId]);
+  }, [current, projectId]);
 
   useEffect(() => {
     if (current){
-      if (current.status === 'Completed') setViewMode('mesh');
+      if (current?.status === 'Completed') setViewMode('mesh');
       else setViewMode('voxel');
       setPrompt(current.prompt);
-      if (current.status === 'Editing' && current.meshLink) {
+      if (current?.status === 'Editing' && current.meshLink) {
         outDated.onOpen();
       }
     }
@@ -117,6 +119,12 @@ const PromptEditor = () => {
           setMeshData(res.output);
           setTimeout(handleSave, 2000);
         }
+        else if (res.status === 'FAILED') {
+          setLoading(false);
+          window.localStorage.removeItem(projectId);
+          setReqId(null);
+          setViewMode('voxel');
+        }
       }
     }
     
@@ -153,8 +161,16 @@ const PromptEditor = () => {
           checkReq();
         }
         else if (res.status === 'Completed') {
+          const updates = await update3DUrls(projectId);
+          updateProject(projectId, {status: "Completed", ...updates});
           setViewMode('mesh');
-          updateProject(projectId, {status: "Completed", meshLink: res.meshLink});
+          window.sessionStorage.removeItem(projectId);
+          updateUserInfo();
+          setIsGenerating(false);
+        }
+        else if (res.status === 'Failed') {
+          setViewMode('voxel');
+          updateProject(projectId, {status: "Failed"});
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();
           setIsGenerating(false);
@@ -166,10 +182,10 @@ const PromptEditor = () => {
   }, [projectId, isGenerating, delay, setViewMode, updateProject, updateUserInfo]);
 
   const handleGenerateModel = async () => {
-    const voxelData = generatePointCloud(voxels, voxelSize);
+    const vertices = generatePointCloud(voxels, voxelSize);
     try {
       setIsGenerating(true);
-      await startStage2(projectId, current?.prompt);
+      await startStage2(projectId, current?.prompt, vertices);
       updateUserInfo();
       outDated.onClose();
       updateProject(projectId, {status: "Generating"});

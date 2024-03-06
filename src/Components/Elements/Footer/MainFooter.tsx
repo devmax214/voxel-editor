@@ -1,5 +1,5 @@
-import { Box } from '@ui/Box/Box'
-import React from 'react'
+import { Box } from '@chakra-ui/react';
+import React from 'react';
 
 const MainFooter = () => {
     return (

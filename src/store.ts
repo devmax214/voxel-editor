@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import * as THREE from "three";
+import type { Project } from "utils/types";
 
 interface BasicState {
   loading: boolean;
@@ -53,4 +54,14 @@ export const useThreeStore = create<ThreeState>((set) => ({
 
   mesh: null,
   setMesh: (mesh: THREE.BufferGeometry | null) => set({ mesh }),
+}));
+
+interface PopularState {
+  populars: Project[];
+  setPopulars: (populars: Project[]) => void;
+}
+
+export const useCompletedProjects = create<PopularState>((set) => ({
+  populars: [],
+  setPopulars: (populars: Project[]) => set({ populars }),
 }));

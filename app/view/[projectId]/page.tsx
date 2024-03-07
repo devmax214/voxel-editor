@@ -5,9 +5,7 @@ import View from "@/Pages/View/View";
 
 const Page = () => {
   return (
-    <div>
-      <View />
-    </div>
+    <View />
   );
 }
 

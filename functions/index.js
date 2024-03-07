@@ -173,7 +173,7 @@ exports.voxelCreated = functions.https.onRequest(async (req, res) => {
   })
 })
 
-const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/1qao7hbqaekjpm";
+const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/gg3lo31p6vvlb0";
 const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
 const FIREBASE_CLOUD_BASEURL = "https://us-central1-enlighten-3d-backend.cloudfunctions.net";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -419,7 +419,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   cors(req, res, async ()=>{
     if(req.method === 'POST'){
       try {
-        const { id, status, output, executionTime } = req.body;
+        const { id, status, output, executionTime, error } = req.body;
         const snapShot = await db.collection("projects").where("meshReqId", "==", id).limit(1).get();
         const projectRef = snapShot.empty ? null : snapShot.docs[0].ref;
         const projectData = snapShot.empty ? null : snapShot.docs[0].data();
@@ -449,10 +449,10 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
                 filename: "texture_roughness.jpg",
                 base64: output.roughness
               },
-              // {
-              //   filename: "mesh.png",
-              //   base64: output.screenshot
-              // }
+              {
+                filename: "mesh.png",
+                base64: output.screenshot
+              }
             ];
     
             const uploadPromises = filesData.map(async (fileData) => {
@@ -505,6 +505,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
               'billing.hold': userData.billing.hold - DEFAULT_REQ_CREDIT
             });
 
+            console.log("error", error);
             res.status(200).json("Job failed");
           }
         }

@@ -91,7 +91,7 @@ const Home = () => {
             {populars.map((popular, index) => (
               <GridItem key={`popular_${index}`}>
                 <Link href={`/view/${popular.id}`}>
-                  <Image src={popular.imageLink || "/default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
+                  <Image src={popular.meshLink || popular.imageLink} alt='Image' height={100} width={100} fetchPriority='high' />
                 </Link>
               </GridItem>
             ))}

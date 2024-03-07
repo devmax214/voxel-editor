@@ -176,7 +176,7 @@ const Login = () => {
           spacing={4}
           p="3rem"
           // backgroundColor="#f5f5f5"
-          backgroundColor="#ffbd59"
+          backgroundColor="#ffbd59bd"
           boxShadow="md"
           borderRadius="20px"
         >

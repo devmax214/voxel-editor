@@ -213,7 +213,7 @@ export const update3DUrls = async (projectId: string) => {
   const albedoUrl = await getDownloadURL(ref(storage, `${projectId}/texture_kd.jpg`));
   const metallicUrl = await getDownloadURL(ref(storage, `${projectId}/texture_metallic.jpg`));
   const roughnessUrl = await getDownloadURL(ref(storage, `${projectId}/texture_roughness.jpg`));
-  // const meshLink = await getDownloadURL(ref(storage, `${projectId}/mesh.png`));
+  const meshLink = await getDownloadURL(ref(storage, `${projectId}/mesh.png`));
 
   const projectRef = doc(db, 'projects', projectId);
   await updateDoc(projectRef, {
@@ -222,7 +222,7 @@ export const update3DUrls = async (projectId: string) => {
     albedoUrl,
     metallicUrl,
     roughnessUrl,
-    // meshLink
+    meshLink
   });
 
   return {

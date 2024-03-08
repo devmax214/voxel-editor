@@ -32,7 +32,6 @@ const nextConfig = {
 
     return config
   },
-  distDir: './dist', // Changes the build output directory to `./dist/`.
 };
 
 export default nextConfig;

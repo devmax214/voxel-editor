@@ -16,7 +16,7 @@ import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
 import { useToast } from "@chakra-ui/react";
 // import { voxelCreated, updateVoxel } from "utils/api";
-import { voxelCreated, updateVoxel, update3DUrls } from "@/Firebase/dbactions";
+import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
 import { cropToSquare } from "utils/utils";
@@ -166,15 +166,17 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
     roughness: ''
   });
 
+  const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${projectId}&fileName=`;
+
   useEffect(() => {
-    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.objUrl) {
+    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshGenerated) {
       setUrls({
-        obj: current.objUrl,
-        mtl: current.mtlUrl,
-        albedo: current.albedoUrl,
-        metallic: current.metallicUrl,
-        roughness: current.roughnessUrl
-      })
+        obj: `${baseURL}model.obj`,
+        mtl: `${baseURL}model.mtl`,
+        albedo: `${baseURL}texture_kd.jpg`,
+        metallic: `${baseURL}texture_metallic.jpg`,
+        roughness: `${baseURL}texture_roughness.jpg`
+      });
       setShow(true);
     }
   }, [current]);
@@ -294,10 +296,10 @@ const Views: React.FC = () => {
               const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
               if (current.voxelData.length === 0) {
                 const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+                updateProject(projectId, { status: res.project.status, voxelData: voxelData, lastModified: new Date().toISOString() });
               } else {
-                const res = await updateVoxel(projectId, voxelData, iconUrl, "Editing", current.prompt);
-                updateProject(projectId, { status: "Editing", voxelData: voxelData, imageLink: iconUrl, lastModified: new Date().toISOString() });
+                const res = await updateVoxel(projectId, voxelData, "Editing", current.prompt);
+                updateProject(projectId, { status: "Editing", voxelData: voxelData, lastModified: new Date().toISOString() });
               }
               toast({
                 title: 'Success',
@@ -325,7 +327,7 @@ const Views: React.FC = () => {
       console.log("autoSaved");
       const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
       try {
-        const res = await updateVoxel(projectId, voxelData, current.imageLink, "Editing", current.prompt);
+        const res = await updateVoxel(projectId, voxelData, "Editing", current.prompt);
         updateProject(projectId, { voxelData: voxelData, status: "Editing", lastModified: new Date().toISOString() });
       } catch (error) {
         console.log(error);

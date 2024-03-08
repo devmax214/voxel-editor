@@ -32,14 +32,16 @@ const View: React.FC = () => {
     roughness: ''
   });
 
+  const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${projectId}&fileName=`;
+
   useEffect(() => {
     if (current?.status === 'Completed') {
       setUrls({
-        obj: current.objUrl,
-        mtl: current.mtlUrl,
-        albedo: current.albedoUrl,
-        metallic: current.metallicUrl,
-        roughness: current.roughnessUrl
+        obj: `${baseURL}model.obj`,
+        mtl: `${baseURL}model.mtl`,
+        albedo: `${baseURL}texture_kd.jpg`,
+        metallic: `${baseURL}texture_metallic.jpg`,
+        roughness: `${baseURL}texture_roughness.jpg`
       });
     }
   }, [current]);

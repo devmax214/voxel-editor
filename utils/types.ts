@@ -13,13 +13,7 @@ export type Project = {
   voxelReqId: string;
   voxelData: Voxel[];
   meshReqId: string;
-  meshLink: string;
-  objUrl: string;
-  mtlUrl: string;
-  albedoUrl: string;
-  metallicUrl: string;
-  roughnessUrl: string;
-  imageLink: string;
+  meshGenerated: boolean;
   lastModified: string;
   prompt: string;
 }

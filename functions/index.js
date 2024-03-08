@@ -105,8 +105,7 @@ exports.createProject = functions.https.onRequest(async (req, res) => {
           status: "Blank",
           progress: 0,
           voxelData: [],
-          imageLink: "",
-          meshLink: ""
+          meshGenerated: false
         }
         const projectRef = await db.collection('projects').add(project);
         const projectId = projectRef.id;
@@ -341,7 +340,7 @@ exports.removeProject = functions.https.onRequest(async (req, res) => {
       try {
         const { projectId } = req.query;
         await db.collection("projects").doc(projectId).delete();
-        await storage.deleteFiles
+        await storage.deleteFiles(`${projectId}/`);
         res.status(200).json({ message: 'Project removed successfully' });
       } catch (error) {
         console.log('Error removing project:', error);
@@ -351,14 +350,6 @@ exports.removeProject = functions.https.onRequest(async (req, res) => {
       res.status(405).send('Method Not Allowed');
     }
   })
-});
-
-exports.deleteProjectIcon = functions.firestore.document('projects/{projectId}').onDelete(async (snap, context) => {
-  const projectId = context.params.projectId;
-
-  const storageRef = admin.storage().bucket();
-  const fileRef = storageRef.file(`${projectId}/icon.png`);
-  await fileRef.delete();
 });
 
 exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.topic(topicName).onPublish(async (message, context) => {
@@ -442,6 +433,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
                 base64: output.albedo
               },
               {
+                field: "metallic",
                 filename: "texture_metallic.jpg",
                 base64: output.metallic
               },
@@ -485,6 +477,7 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   
             await projectRef.update({
               status: "Completed",
+              meshGenerated: true
             });
   
             const requireCredit = Math.floor(executionTime / 60000);
@@ -546,6 +539,33 @@ exports.voxelGenerated = functions.https.onRequest(async (req, res) => {
       } catch (error) {
         console.log('Voxel generation failed:', error);
         res.status(500).json('Voxel generation failed');
+      }
+    }
+  })
+});
+
+exports.getAsset = functions.https.onRequest(async (req, res) => {
+  cors(req, res, async () => {
+    if (req.method === 'GET') {
+      try {
+        const { projectId, fileName } = req.query;
+        const storageRef = admin.storage().bucket();
+        const fileRef = storageRef.file(`${projectId}/${fileName}`);
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        
+        // Create a read stream for the file
+        const fileReadStream = fileRef.createReadStream();
+        
+        // Pipe the read stream to the response object
+        fileReadStream.pipe(res);
+        
+        fileReadStream.on('error', (error) => {
+          console.error('Stream encountered error:', error);
+          res.status(500).end('Internal Server Error');
+        });     
+      } catch (error) {
+        console.log('Get asset failed:', error);
+        res.status(500).json('Get asset failed');
       }
     }
   })

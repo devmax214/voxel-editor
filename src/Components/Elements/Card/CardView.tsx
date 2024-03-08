@@ -21,7 +21,7 @@ const CardView = ({
 } : {
   project: Project
 }) => {
-  const { id, progress, status, uid, voxelData, meshLink, imageLink, name, lastModified } = project;
+  const { id, progress, status, uid, voxelData, name, lastModified } = project;
   const { addProject, deleteProject } = useProjectContext();
   const { setLoading } = useBasicStore();
 
@@ -43,13 +43,15 @@ const CardView = ({
     setLoading(false);
   }
 
+  const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${id}&fileName=`;
+
   return (
     <>
       <div className="flex justify-between items-center gap-x-2">
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
             <Box width={100} height={100}>
-              <Image src={imageLink ? imageLink: "/default_img.png"} alt='Image' height={100} width={100} fetchPriority='high' />
+              <Image src={status === 'Completed' ? `${baseURL}mesh.png` : status === 'Blank' ? "/default_img.png" : `${baseURL}icon.png`} alt='Image' height={100} width={100} fetchPriority='high' />
             </Box>
           </Link>
           <Box width={110}>

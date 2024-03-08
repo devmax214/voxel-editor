@@ -35,13 +35,7 @@ const Home = () => {
         voxelReqId: '',
         voxelData: [],
         meshReqId: '',
-        meshLink: '',
-        objUrl: '',
-        mtlUrl: '',
-        albedoUrl: '',
-        metallicUrl: '',
-        roughnessUrl: '',
-        imageLink: '',
+        meshGenerated: false,
         lastModified: new Date().toISOString(),
         prompt: "",
       });
@@ -91,7 +85,7 @@ const Home = () => {
             {populars.map((popular, index) => (
               <GridItem key={`popular_${index}`}>
                 <Link href={`/view/${popular.id}`}>
-                  <Image src={popular.meshLink || popular.imageLink} alt='Image' height={100} width={100} fetchPriority='high' />
+                  <Image src={`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${popular.id}&fileName=mesh.png`} alt='Image' height={100} width={100} fetchPriority='high' />
                 </Link>
               </GridItem>
             ))}

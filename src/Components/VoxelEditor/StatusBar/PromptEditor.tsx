@@ -25,6 +25,7 @@ import { useProjectContext } from "@/contexts/projectContext";
 import { checkStatus, getUserInfo, saveVoxelReqId, update3DUrls } from '@/Firebase/dbactions';
 import { generatePointCloud } from 'utils/voxel';
 import { useAuthContext } from '@/contexts/authContext';
+import { Project } from 'utils/types';
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -66,7 +67,7 @@ const PromptEditor = () => {
       if (current?.status === 'Completed') setViewMode('mesh');
       else setViewMode('voxel');
       setPrompt(current.prompt);
-      if (current?.status === 'Editing' && current.meshLink) {
+      if (current?.status === 'Editing' && current.meshGenerated) {
         outDated.onOpen();
       }
     }
@@ -154,15 +155,15 @@ const PromptEditor = () => {
     if (!isGenerating) return;
 
     const checkReq = async () => {
-      const res = await checkStatus(projectId) as ({status: string, progress: number, meshLink: string;});
+      const res = await checkStatus(projectId) as Project;
       if (res) {
         if (res.status === 'Editing' || res.status === 'Generating') {
           await delay(10000);
           checkReq();
         }
         else if (res.status === 'Completed') {
-          const updates = await update3DUrls(projectId);
-          updateProject(projectId, {status: "Completed", ...updates});
+          // const updates = await update3DUrls(projectId);
+          // updateProject(projectId, {status: "Completed", ...updates});
           setViewMode('mesh');
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();

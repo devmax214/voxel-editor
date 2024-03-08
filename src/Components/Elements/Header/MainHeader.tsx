@@ -3,11 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useParams } from "next/navigation";
-import { ReactNode, useState, useEffect } from "react";
+import { ReactNode, useState } from "react";
 import { Box, Flex, Text, Stack, Button, Input } from "@chakra-ui/react";
 import { GridProps } from "@chakra-ui/styled-system";
 import ProfileCard from "./ProfileCard";
-import { useBasicStore, useCompletedProjects, useThreeStore } from "@/store";
+import { useBasicStore, useCompletedProjects } from "@/store";
 // import { changeProjectName } from "utils/api";
 import { changeProjectName } from "@/Firebase/dbactions";
 import { useProjectContext } from "@/contexts/projectContext";

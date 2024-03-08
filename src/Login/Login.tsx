@@ -176,12 +176,12 @@ const Login = () => {
           spacing={4}
           p="3rem"
           // backgroundColor="#f5f5f5"
-          backgroundColor="#ffbd59bd"
+          backgroundColor="#FFD28F"
           boxShadow="md"
           borderRadius="20px"
         >
           {/* <Avatar bg="blue.500" alignSelf="center" /> */}
-          <Image alignSelf="center" src='/short-height-logo.jpg' height="40px" width="80px" alt='miniLogo' />
+          <Image alignSelf="center" src='/short-height-logo.png' height="80px" width="80px" alt='miniLogo' />
           
           <Heading fontSize={26} textAlign="center" color="">Welcome to Enlighten 3D</Heading>
           <Text fontSize={14} textAlign="center" color="">Enter your email and password to get started.</Text>

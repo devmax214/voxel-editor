@@ -1,4 +1,5 @@
-import { Box, Flex, Progress, Text, Image, Button, Spinner } from '@chakra-ui/react';
+import Image from "next/image";
+import { Box, Flex, Progress, Text, Button, Spinner } from '@chakra-ui/react';
 import {
   AlertDialog,
   AlertDialogOverlay,

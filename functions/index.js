@@ -10,6 +10,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const cors = require('cors')({ origin: true });
+const date_fns = require("date-fns");
 
 admin.initializeApp();
 // admin.initializeApp(functions.config().firebase);
@@ -227,7 +228,8 @@ exports.startStage2 = functions.https.onRequest(async (req,res) => {
 
         await projectRef.update({
           status: "Generating",
-          meshReqId: resData.id
+          meshReqId: resData.id,
+          requestedAt: new Date().toISOString()
         });
 
         res.status(200).json("Requested");
@@ -569,4 +571,41 @@ exports.getAsset = functions.https.onRequest(async (req, res) => {
       }
     }
   })
+});
+
+exports.cancelJob = functions.pubsub.schedule('every 1 hours').onRun(async (context) => {
+  try {
+    const snapShot = await db.collection("projects").where("status", "==", "Generating").select("requestedAt", "meshReqId", "uid").get();
+    const generatingProjects = snapShot.empty ? [] : snapShot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+    const cancelJob = generatingProjects.filter(project => date_fns.differenceInHours(new Date(), new Date(project.requestedAt)) > 5);
+    
+    cancelJob.forEach(async project => {
+      try {
+        await fetch(`${SECOND_AI_API_BASEURL}/cancel/${project.meshReqId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${API_KEY}`
+          },
+        });
+      } catch (err) {
+        console.log(err);
+      } finally {
+        const projectRef = db.collection("projects").doc(project.id);
+        await projectRef.update({
+          status: "Failed"
+        });
+        const userRef = db.collection('users').doc(project.uid);
+        await userRef.update({
+          'billing.compute_unit': userData.billing.compute_unit + DEFAULT_REQ_CREDIT,
+          'billing.hold': userData.billing.hold - DEFAULT_REQ_CREDIT
+        });
+      }
+    });
+
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 });

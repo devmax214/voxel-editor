@@ -17,8 +17,11 @@ const nextConfig = {
   },
   compress: true,
   images: {
-    domains: [
-      // add images domains here
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
     ],
   },
   poweredByHeader: false,

@@ -64,7 +64,7 @@ const PromptEditor = () => {
 
   useEffect(() => {
     if (current){
-      if (current?.status === 'Completed') setViewMode('mesh');
+      if (current?.status === 'Completed' || current?.status === 'Generating') setViewMode('mesh');
       else setViewMode('voxel');
       setPrompt(current.prompt);
       if (current?.status === 'Editing' && current.meshGenerated) {

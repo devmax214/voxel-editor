@@ -94,7 +94,7 @@ const FileNameViewer = () => {
     return (
         <div className="flex items-center">
             <div className="w-72 text-center">
-                <Text className="text-lg" noOfLines={2}>{current?.name || "undefined"}</Text>
+                <Text fontSize={'1.125rem'} lineHeight={1.1} noOfLines={2}>{current?.name || "undefined"}</Text>
                 <p className="text-black text-xs">{new Date(current?.lastModified).toLocaleString()}</p>
             </div>
         </div>
@@ -130,7 +130,7 @@ const FileNamgeChanger = () => {
                 :
                 <>
                     <div className="w-60 text-center">
-                        <Text className="text-lg" noOfLines={2}>{current?.name || "undefined"}</Text>
+                        <Text fontSize={'1.125rem'} lineHeight={1.1} noOfLines={2}>{current?.name || "undefined"}</Text>
                         <p className="text-black text-xs">{new Date(current?.lastModified).toLocaleString()}</p>
                     </div>
                 </>

@@ -272,6 +272,9 @@ const Views: React.FC = () => {
   const toast = useToast();
 
   const save = useCallback(async (e: KeyboardEvent) => {
+    const current = projects.filter(project => project.id === projectId)[0];
+    if (current.status === 'Generating') return;
+
     if (e.code === "Backslash" && user) {
       e.preventDefault();
       if (viewMode === 'voxel') {
@@ -285,7 +288,6 @@ const Views: React.FC = () => {
               const snapshot = await uploadBytes(storageRef, croppedBlob);
               const iconUrl = await getDownloadURL(storageRef);
 
-              const current = projects.filter(project => project.id === projectId)[0];
               console.log("saved", current);
               const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
               if (current.voxelData.length === 0) {
@@ -317,6 +319,8 @@ const Views: React.FC = () => {
 
   const autoSave = useCallback(async () => {
     const current = projects.filter(project => project.id === projectId)[0];
+    if (current.status === 'Generating') return;
+
     if (current?.voxelData.length !== voxels.length) {
       console.log("autoSaved");
       const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
@@ -360,8 +364,6 @@ const Views: React.FC = () => {
 }
 
 const Scene: React.FC = () => {
-  const { viewMode } = useBasicStore();
-
   return (
     <div className="canvas">
       <InfoBox />

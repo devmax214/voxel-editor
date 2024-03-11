@@ -22,7 +22,7 @@ const MainHeader = (props: GridProps) => {
     return (
         <NavBarContainer {...props}>
             <div className="flex items-center gap-x-4">
-                <Image priority={true} src={"/Enlighten3D_logo.jpg"} alt="logo" width={70} height={70} className="h-auto" />
+                <Image priority={true} src={"/logo_white.png"} alt="logo" width={70} height={70} className="h-auto" />
                 <MenuLinks isOpen={isOpen} />
             </div>
             {pathName?.startsWith('/editor') && <div className="flex items-center gap-x-10">

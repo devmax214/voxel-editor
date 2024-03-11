@@ -7,7 +7,6 @@ import { useCompletedProjects } from '@/store';
 import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { Environment, PerspectiveCamera, Html, ContactShadows, OrbitControls } from '@react-three/drei';
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
-import { Spinner } from '@chakra-ui/react';
 
 const SceneBackground: React.FC = () => {
   const { scene } = useThree();
@@ -55,7 +54,7 @@ const View: React.FC = () => {
         model.setMaterials(materials);
       }
       return model;
-    }
+    },
   );
 
   const metallicnessMap = useLoader(THREE.TextureLoader, urls.metallic);
@@ -72,6 +71,34 @@ const View: React.FC = () => {
 
   const bounds = new THREE.Box3().setFromObject(obj);
 
+  return (
+    <>
+      {urls.obj ?
+        <group>
+          <mesh
+            castShadow
+            receiveShadow
+            rotation={[Math.PI * 3 / 2, 0, 0]}
+            geometry={geometry}
+          >
+            <meshPhysicalMaterial
+              side={THREE.DoubleSide}
+              attach={'material'}
+              map={textureMap}
+              roughnessMap={roughnessMap}
+              metalnessMap={metallicnessMap}
+            />
+          </mesh>
+          <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
+        </group>
+        :
+        <group>
+        </group>}
+    </>
+  );
+}
+
+const Scene: React.FC = () => {
   return (
     <div className="canvas">
       <div className="w-full h-full">
@@ -90,32 +117,13 @@ const View: React.FC = () => {
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
           </directionalLight>
           <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-            {urls.obj ?
-              <group>
-                <mesh
-                  castShadow
-                  receiveShadow
-                  rotation={[Math.PI * 3 / 2, 0, 0]}
-                  geometry={geometry}
-                >
-                  <meshPhysicalMaterial
-                    side={THREE.DoubleSide}
-                    attach={'material'}
-                    map={textureMap}
-                    roughnessMap={roughnessMap}
-                    metalnessMap={metallicnessMap}
-                  />
-                </mesh>
-                <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
-              </group>
-              :
-              <group></group>}
+            <View />
           </Suspense>
           <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
         </Canvas>
       </div>
     </div>
-  );
+  )
 }
 
-export default View;
+export default Scene;

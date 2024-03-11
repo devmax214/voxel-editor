@@ -47,7 +47,7 @@ const Home = () => {
   return (
     <>
       <Container w={'full'} maxW='8xl' my={4}>
-        <Heading mb={4} as={'h2'} size={'2xl'} noOfLines={1}>Enlighten Asset (Alpha)</Heading>
+        <Heading mb={8} as={'h2'} className='text-3xl' noOfLines={1}>Enlighten Asset (Alpha)</Heading>
         <Grid mb={4} templateColumns='repeat(12, 1fr)' gap={4} w={'100%'} border={1} borderStyle={'solid'} borderColor={'dark'} borderRadius={8}>
           <GridItem colSpan={4} p={2}>
             <Text fontSize='md'>Create New</Text>
@@ -81,12 +81,14 @@ const Home = () => {
       <Container w={'full'} maxW='8xl' my={4}>
         <Box border={1} borderStyle={'solid'} p={2} borderColor={'dark'} borderRadius={8}>
           <Text fontSize='md'>Popular Assets</Text>
-          <Grid templateColumns='repeat(12, 1fr)' p={2} gap={4} w={'100%'}>
+          <Grid templateColumns='repeat(8, 1fr)' p={2} gap={2} w={'100%'}>
             {populars.map((popular, index) => (
               <GridItem key={`popular_${index}`}>
-                <Link href={`/view/${popular.id}`}>
-                  <Image src={`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${popular.id}&fileName=mesh.png`} alt='Image' height={100} width={100} fetchPriority='high' />
-                </Link>
+                <Box border={1} borderStyle={'solid'} p={2} borderColor={'darkgrey'} borderRadius={8}>
+                  <Link href={`/view/${popular.id}`}>
+                    <Image src={`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${popular.id}&fileName=mesh.png`} alt='Image' height={160} width={160} fetchPriority='high' />
+                  </Link>
+                </Box>
               </GridItem>
             ))}
           </Grid>

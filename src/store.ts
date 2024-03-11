@@ -31,9 +31,6 @@ export const useBasicStore = create<BasicState>((set) => ({
 }));
 
 interface ThreeState {
-  projectName: string;
-  setProjectName: (projectName: string) => void;
-
   voxels: THREE.Vector3[];
   setVoxels: (voxels: THREE.Vector3[]) => void;
   addVoxel: (voxel: THREE.Vector3) => void;
@@ -44,8 +41,6 @@ interface ThreeState {
 }
 
 export const useThreeStore = create<ThreeState>((set) => ({
-  projectName: '',
-  setProjectName: (projectName: string) => set({ projectName }),
 
   voxels: [],
   setVoxels: (voxels: THREE.Vector3[]) => set({ voxels }),

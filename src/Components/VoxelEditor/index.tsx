@@ -2,7 +2,7 @@
 
 import React, { Suspense, useRef, useState, useEffect, useCallback, useMemo } from "react";
 import { Canvas, useThree, ThreeEvent, useLoader } from "@react-three/fiber";
-import { OrbitControls, PerspectiveCamera, Environment, useGLTF, AccumulativeShadows, RandomizedLight, ContactShadows, Html } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, Environment, ContactShadows, Html } from "@react-three/drei";
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 import * as THREE from "three";
 import { useBasicStore, useThreeStore } from "@/store";
@@ -10,7 +10,6 @@ import { useBasicStore, useThreeStore } from "@/store";
 import ToolInfo from "./ToolInfo";
 import StatusBar from "./StatusBar";
 import InfoBox from "./InfoBox";
-// import { Material } from "utils/voxel";
 import { useParams } from "next/navigation";
 import { useAuthContext } from "@/contexts/authContext";
 import { useProjectContext } from "@/contexts/projectContext";
@@ -143,17 +142,11 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
         onPointerLeave={onOut}
         onClick={onClick}
       />
-      <OrbitControls />
     </group>
   );
 };
 
-type MeshProps = {
-  mesh: THREE.BufferGeometry | null;
-}
-
-const MeshView: React.FC<MeshProps> = ({ mesh }) => {
-  const [show, setShow] = useState<boolean>(false);
+const MeshView: React.FC = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const { projects } = useProjectContext();
@@ -177,7 +170,6 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
         metallic: `${baseURL}texture_metallic.jpg`,
         roughness: `${baseURL}texture_roughness.jpg`
       });
-      setShow(true);
     }
   }, [current]);
 
@@ -218,42 +210,44 @@ const MeshView: React.FC<MeshProps> = ({ mesh }) => {
   const bounds = new THREE.Box3().setFromObject(obj);
   // const bounds = new THREE.Box3().setFromObject(nodes.object as THREE.Mesh);
 
-  return ((show && urls.obj) ?
-    // <mesh
-    //   rotation={[Math.PI * 3 / 2, 0, 0]}
-    //   geometry={mesh}
-    //   material={Material}
-    // />
-    <group>
-      <mesh
-        castShadow
-        receiveShadow
-        rotation={[Math.PI * 3 / 2, 0, 0]}
-        geometry={geometry}
-      >
-        <meshPhysicalMaterial
-          side={THREE.DoubleSide}
-          attach={'material'}
-          map={textureMap}
-          roughnessMap={roughnessMap}
-          metalnessMap={metallicnessMap}
-        />
-      </mesh>
-      {/* <mesh
-        castShadow
-        rotation={[Math.PI * 3 / 2, 0, 0]}
-        geometry={geometry}
-        material={material}
-      /> */}
-      {/* <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, bounds.min.z, 0]}>
-        <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
-        <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
-      </AccumulativeShadows> */}
-      <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
-      <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
-    </group>
-    :
-    <group></group>
+  return (
+    <>
+      {urls.obj ?
+      // <mesh
+      //   rotation={[Math.PI * 3 / 2, 0, 0]}
+      //   geometry={mesh}
+      //   material={Material}
+      // />
+      <group>
+        <mesh
+          castShadow
+          receiveShadow
+          rotation={[Math.PI * 3 / 2, 0, 0]}
+          geometry={geometry}
+        >
+          <meshPhysicalMaterial
+            side={THREE.DoubleSide}
+            attach={'material'}
+            map={textureMap}
+            roughnessMap={roughnessMap}
+            metalnessMap={metallicnessMap}
+          />
+        </mesh>
+        {/* <mesh
+          castShadow
+          rotation={[Math.PI * 3 / 2, 0, 0]}
+          geometry={geometry}
+          material={material}
+        /> */}
+        {/* <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, bounds.min.z, 0]}>
+          <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
+          <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
+        </AccumulativeShadows> */}
+        <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
+      </group>
+      :
+      <group></group>}
+    </>
   )
 }
 
@@ -274,7 +268,7 @@ const Views: React.FC = () => {
   const { projects, updateProject } = useProjectContext();
   const { gl } = useThree();
   const { viewMode, setLoading } = useBasicStore();
-  const { voxels, mesh } = useThreeStore();
+  const { voxels } = useThreeStore();
   const toast = useToast();
 
   const save = useCallback(async (e: KeyboardEvent) => {
@@ -350,15 +344,24 @@ const Views: React.FC = () => {
       {
         viewMode === 'voxel'
           ?
-          <VoxelsView voxels={voxels} />
+          <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
+            <VoxelsView voxels={voxels} />
+          </Suspense>
           :
-          <MeshView mesh={mesh} />
+          <>
+            <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
+              <MeshView />
+            </Suspense>
+            <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
+          </>
       }
     </>
   )
 }
 
 const Scene: React.FC = () => {
+  const { viewMode } = useBasicStore();
+
   return (
     <div className="canvas">
       <InfoBox />
@@ -380,9 +383,8 @@ const Scene: React.FC = () => {
           <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
           </directionalLight>
-          <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-            <Views />
-          </Suspense>
+          <Views />
+          <OrbitControls makeDefault />
         </Canvas>
       </div>
     </div>

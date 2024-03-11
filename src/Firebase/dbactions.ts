@@ -61,13 +61,9 @@ export const createProject = async (uid: string) => {
       imageLink: "",
       meshReqId: "",
       meshLink: "",
-      objUrl: "",
-      mtlUrl: "",
-      albedoUrl: "",
-      metallicUrl: "",
-      roughnessUrl: "",
       lastModified: new Date().toISOString(),
-      prompt: ""
+      prompt: "",
+      meshGenerated: false
     };
     const projectsRef = collection(db, 'projects');
     const projectRef = await addDoc(projectsRef, project);
@@ -201,35 +197,6 @@ export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
     console.log(error);
     return error;
   }
-}
-
-export const update3DUrls = async (projectId: string) => {
-  const storage = getStorage();
-  const objUrl = await getDownloadURL(ref(storage, `${projectId}/model.obj`));
-  const mtlUrl = await getDownloadURL(ref(storage, `${projectId}/model.mtl`));
-  const albedoUrl = await getDownloadURL(ref(storage, `${projectId}/texture_kd.jpg`));
-  const metallicUrl = await getDownloadURL(ref(storage, `${projectId}/texture_metallic.jpg`));
-  const roughnessUrl = await getDownloadURL(ref(storage, `${projectId}/texture_roughness.jpg`));
-  const meshLink = await getDownloadURL(ref(storage, `${projectId}/mesh.png`));
-
-  const projectRef = doc(db, 'projects', projectId);
-  await updateDoc(projectRef, {
-    objUrl,
-    mtlUrl,
-    albedoUrl,
-    metallicUrl,
-    roughnessUrl,
-    meshLink
-  });
-
-  return {
-    objUrl,
-    mtlUrl,
-    albedoUrl,
-    metallicUrl,
-    roughnessUrl,
-    // meshLink
-  };
 }
 
 export const getCompletedProjects = async () => {

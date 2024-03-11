@@ -22,7 +22,7 @@ import { Input } from '@chakra-ui/input';
 import { Button, Spinner } from '@chakra-ui/react';
 import { changeProjectName, startStage2 } from 'utils/api';
 import { useProjectContext } from "@/contexts/projectContext";
-import { checkStatus, getUserInfo, saveVoxelReqId, update3DUrls } from '@/Firebase/dbactions';
+import { checkStatus, getUserInfo, saveVoxelReqId } from '@/Firebase/dbactions';
 import { generatePointCloud } from 'utils/voxel';
 import { useAuthContext } from '@/contexts/authContext';
 import { Project } from 'utils/types';
@@ -162,8 +162,6 @@ const PromptEditor = () => {
           checkReq();
         }
         else if (res.status === 'Completed') {
-          // const updates = await update3DUrls(projectId);
-          // updateProject(projectId, {status: "Completed", ...updates});
           setViewMode('mesh');
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();
@@ -197,10 +195,10 @@ const PromptEditor = () => {
     // document.body.removeChild(link);
     try {
       setIsGenerating(true);
+      updateProject(projectId, {status: "Generating"});
       await startStage2(projectId, current?.prompt, vertices);
       updateUserInfo();
       outDated.onClose();
-      updateProject(projectId, {status: "Generating"});
       window.sessionStorage.setItem(projectId, "true");
     } catch (error: any) {
       setIsGenerating(false);

@@ -33,9 +33,9 @@ const usePLYLoader = (file: File | null, voxelSize: number) => {
           geometry.computeVertexNormals();
           
           // const mesh = new THREE.Mesh(geometry, Material);
-          const vertices = voxelizeMesh(geometry, voxelSize);
+          // const vertices = voxelizeMesh(geometry, voxelSize);
           setMesh(geometry);
-          setVertices(vertices);
+          // setVertices(vertices);
         }
       } catch (error) {
         console.error("Error reading file:", error);

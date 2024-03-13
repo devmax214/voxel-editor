@@ -19,13 +19,13 @@ const ModelTip = () => {
     else setShow(false);
   }, [current]);
 
-  if (!show || viewMode === 'voxel') return null;
+  if (!show || viewMode !== 'model') return null;
 
   return (
     <div className="fixed top-40 z-10 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
       <Alert status='info' className="rounded-lg">
         <p>
-          {'Click "Generate Mesh" to produce mesh.'}
+          {'Click "Generate Model" to produce model.'}
         </p>
       </Alert>
     </div>

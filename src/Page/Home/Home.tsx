@@ -87,7 +87,14 @@ const Home = () => {
               <GridItem key={`popular_${index}`}>
                 <Box borderRadius={8} overflow={'hidden'}>
                   <Link href={`/view/${popular.id}`}>
-                    <Image src={`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${popular.id}&fileName=mesh.png`} alt='Image' height={160} width={160} fetchPriority='high' />
+                    <Image
+                      src={`${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${popular.id}&fileName=mesh.png`}
+                      alt='Image'
+                      height={160}
+                      width={160}
+                      fetchPriority='high'
+                      priority={true}
+                    />
                   </Link>
                 </Box>
               </GridItem>

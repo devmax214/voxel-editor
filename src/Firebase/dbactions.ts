@@ -11,11 +11,6 @@ import {
   deleteDoc,
   orderBy
 } from "firebase/firestore";
-import {
-  ref,
-  getStorage,
-  getDownloadURL
-} from "firebase/storage";
 import { app } from "./config";
 import { Voxel } from "utils/types";
 
@@ -105,6 +100,7 @@ export const removeProject = async (projectId: string) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
     await deleteDoc(projectRef);
+    
     return { message: 'Project removed successfully' };
   } catch (error) {
     console.log(error);
@@ -201,7 +197,7 @@ export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
 
 export const getCompletedProjects = async () => {
   try {
-    const q = query(collection(db, "projects"), where("status", "==", "Completed"));
+    const q = query(collection(db, "projects"), where("status", "==", "Completed"), orderBy("lastModified", "desc"));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];

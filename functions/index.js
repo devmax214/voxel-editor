@@ -479,7 +479,8 @@ exports.meshGenerated = functions.https.onRequest(async (req, res) => {
   
             await projectRef.update({
               status: "Completed",
-              meshGenerated: true
+              meshGenerated: true,
+              lastModified: new Date().toISOString(),
             });
   
             const requireCredit = Math.floor(executionTime / 60000);
@@ -604,6 +605,17 @@ exports.cancelJob = functions.pubsub.schedule('every 1 hours').onRun(async (cont
       }
     });
 
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+});
+
+exports.delete3DAssets = functions.firestore.document('projects/{projectId}').onDelete(async (snapShot, context) => {
+  try {
+    await storage.deleteFiles({
+      prefix: `${context.params.projectId}/`,
+    });
   } catch (error) {
     console.log(error);
     throw error;

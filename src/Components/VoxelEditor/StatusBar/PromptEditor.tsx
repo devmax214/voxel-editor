@@ -64,7 +64,7 @@ const PromptEditor = () => {
 
   useEffect(() => {
     if (current){
-      if (current?.status === 'Completed') setViewMode('mesh');
+      if (current?.status === 'Completed' || current?.status === 'Generating') setViewMode('model');
       else setViewMode('voxel');
       setPrompt(current.prompt);
       if (current?.status === 'Editing' && current.meshGenerated) {
@@ -162,7 +162,7 @@ const PromptEditor = () => {
           checkReq();
         }
         else if (res.status === 'Completed') {
-          setViewMode('mesh');
+          setViewMode('model');
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();
           setIsGenerating(false);
@@ -232,30 +232,28 @@ const PromptEditor = () => {
           :
           <Input placeholder="Propmt" isDisabled={true} value={current?.prompt} onChange={e => setPrompt(e.target.value)} />
         }
-        {viewMode === 'voxel' ?
-          <Button className='w-44' colorScheme='orange' onClick={voxels.length > 0 ? alert.onOpen : handleGenerate} isDisabled={propmt === ''}>Generate Voxel</Button>
-          :
-          <Popover
-            placement='right'
-            isOpen={outDated.isOpen}
-          >
-            <PopoverTrigger>
-              <Button className='w-44' colorScheme='blue' onClick={alert.onOpen} isDisabled={voxels.length === 0 || isGenerating}>
-                {isGenerating ?
-                  <div>
-                    <Spinner />
-                  </div>
-                  :
-                  <div>Generate Mesh</div>}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent>
-              <PopoverArrow />
-              <PopoverBody>
-                <p className="text-sm">Mesh is outdated, click here to regenerate</p>
-              </PopoverBody>
-            </PopoverContent>
-          </Popover>}
+        {viewMode === 'voxel' && <Button className='w-44' colorScheme='orange' onClick={voxels.length > 0 ? alert.onOpen : handleGenerate} isDisabled={propmt === ''}>Generate Voxel</Button>}
+        {viewMode === 'model' && <Popover
+          placement='right'
+          isOpen={outDated.isOpen}
+        >
+          <PopoverTrigger>
+            <Button className='w-44' colorScheme='blue' onClick={alert.onOpen} isDisabled={voxels.length === 0 || isGenerating}>
+              {isGenerating ?
+                <div>
+                  <Spinner />
+                </div>
+                :
+                <div>Generate Model</div>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent>
+            <PopoverArrow />
+            <PopoverBody>
+              <p className="text-sm">Mesh is outdated, click here to regenerate</p>
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>}
       </div>
 
       <AlertDialog motionPreset='slideInBottom' isOpen={alert.isOpen} leastDestructiveRef={cancelRef} onClose={alert.onClose} >

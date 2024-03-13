@@ -51,7 +51,7 @@ const CardView = ({
       <div className="flex justify-between items-center gap-x-2">
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
-            <Box width={160} height={160} border={1} borderStyle={'solid'} borderColor={'darkgrey'} borderRadius={8} overflow={'hidden'}>
+            <Box width={160} height={160} borderRadius={8} overflow={'hidden'}>
               <Image src={status === 'Completed' ? `${baseURL}mesh.png` : status === 'Blank' ? "/default_img.png" : `${baseURL}icon.png`} alt='Image' height={160} width={160} fetchPriority='high' />
             </Box>
           </Link>

@@ -146,7 +146,42 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
   );
 };
 
-const MeshView: React.FC = () => {
+type MeshProps = {
+  mesh: THREE.BufferGeometry | null;
+}
+
+const MeshView: React.FC<MeshProps> = ({ mesh }) => {
+  const aoMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_AO_2K.jpg");
+  const colMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_COL_2K.jpg");
+  const glossMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_GLOSS_2K.jpg");
+  const normalMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_NRM_2K.jpg");
+  const metalnessMap = useLoader(THREE.TextureLoader, "/textures/TerracottaClay001_REFL_2K.jpg");
+
+  const material = useMemo(() => new THREE.MeshPhysicalMaterial({
+    side: THREE.DoubleSide,
+    wireframe: false,
+    map: colMap,
+    aoMap: aoMap,
+    normalMap: normalMap,
+    specularColorMap: metalnessMap,
+    roughnessMap: glossMap,
+    reflectivity: 0.5,
+    roughness: 0.8,
+    metalness: 0.3
+  }), [aoMap, colMap, normalMap, metalnessMap, glossMap]);
+
+  if (!mesh) return;
+
+  return (
+    <mesh
+      rotation={[Math.PI * 3 / 2, 0, 0]}
+      geometry={mesh}
+      material={material}
+    />
+  )
+}
+
+const ModelView: React.FC = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const { projects } = useProjectContext();
@@ -268,10 +303,13 @@ const Views: React.FC = () => {
   const { projects, updateProject } = useProjectContext();
   const { gl } = useThree();
   const { viewMode, setLoading } = useBasicStore();
-  const { voxels } = useThreeStore();
+  const { voxels, mesh } = useThreeStore();
   const toast = useToast();
 
   const save = useCallback(async (e: KeyboardEvent) => {
+    const current = projects.filter(project => project.id === projectId)[0];
+    if (current.status === 'Generating') return;
+
     if (e.code === "Backslash" && user) {
       e.preventDefault();
       if (viewMode === 'voxel') {
@@ -285,7 +323,6 @@ const Views: React.FC = () => {
               const snapshot = await uploadBytes(storageRef, croppedBlob);
               const iconUrl = await getDownloadURL(storageRef);
 
-              const current = projects.filter(project => project.id === projectId)[0];
               console.log("saved", current);
               const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
               if (current.voxelData.length === 0) {
@@ -317,6 +354,8 @@ const Views: React.FC = () => {
 
   const autoSave = useCallback(async () => {
     const current = projects.filter(project => project.id === projectId)[0];
+    if (current.status === 'Generating') return;
+
     if (current?.voxelData.length !== voxels.length) {
       console.log("autoSaved");
       const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
@@ -341,27 +380,23 @@ const Views: React.FC = () => {
 
   return (
     <>
-      {
-        viewMode === 'voxel'
-          ?
-          <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-            <VoxelsView voxels={voxels} />
-          </Suspense>
-          :
-          <>
-            <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-              <MeshView />
-            </Suspense>
-            <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
-          </>
-      }
+      {viewMode === 'voxel' && <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
+        <VoxelsView voxels={voxels} />
+      </Suspense>}
+      {viewMode === 'mesh' && <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
+        <MeshView mesh={mesh} />
+      </Suspense>}
+      {viewMode === 'model' && <>
+        <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
+          <ModelView />
+        </Suspense>
+        <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
+      </>}
     </>
   )
 }
 
 const Scene: React.FC = () => {
-  const { viewMode } = useBasicStore();
-
   return (
     <div className="canvas">
       <InfoBox />

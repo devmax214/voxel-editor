@@ -5,7 +5,7 @@ import { useBasicStore } from '@/store';
 import RadioCard from '@/Components/Elements/Radio/RadioCard';
 
 const ViewModeSwitcher = () => {
-  const options = ['voxel', 'model'];
+  const options = ['voxel', 'mesh', 'model'];
   const { viewMode, setViewMode } = useBasicStore();
 
   const { getRootProps, getRadioProps } = useRadioGroup({

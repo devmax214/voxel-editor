@@ -4,7 +4,7 @@ import React from 'react';
 import * as THREE from "three";
 import { useThreeStore } from '@/store';
 import { useProjectContext } from '@/contexts/projectContext';
-import VoxelEditor from '@/Components/VoxelEditor';
+import Editor from '@/Page/Editor/Editor';
 
 interface Props {
   params: {
@@ -28,6 +28,6 @@ export default function Page({ params }: Props) {
   }, [projects, projectId, setVoxels]);
 
   return (
-    <VoxelEditor />
+    <Editor />
   )
 }

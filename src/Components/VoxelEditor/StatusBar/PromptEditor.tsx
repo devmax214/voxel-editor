@@ -233,6 +233,14 @@ const PromptEditor = () => {
           <Input placeholder="Propmt" isDisabled={true} value={current?.prompt} onChange={e => setPrompt(e.target.value)} />
         }
         {viewMode === 'voxel' && <Button className='w-44' colorScheme='orange' onClick={voxels.length > 0 ? alert.onOpen : handleGenerate} isDisabled={propmt === ''}>Generate Voxel</Button>}
+        {viewMode === 'mesh' && <Button className='w-44' colorScheme='blue' onClick={alert.onOpen} isDisabled={voxels.length === 0 || isGenerating}>
+          {isGenerating ?
+            <div>
+              <Spinner />
+            </div>
+            :
+            <div>Generate Mesh</div>}
+        </Button>}
         {viewMode === 'model' && <Popover
           placement='right'
           isOpen={outDated.isOpen}

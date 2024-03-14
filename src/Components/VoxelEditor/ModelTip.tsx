@@ -3,6 +3,7 @@ import { Alert } from '@chakra-ui/react';
 import { useParams } from 'next/navigation';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useBasicStore } from '@/store';
+import { ProjectStatus } from 'utils/types';
 
 const ModelTip = () => {
   const [show, setShow] = useState<boolean>(false);
@@ -13,7 +14,7 @@ const ModelTip = () => {
   const current = projects.filter(project => project.id === projectId)[0];
 
   useEffect(() => {
-    if (!current?.meshGenerated && current?.status !== 'Generating') {
+    if (!current?.modelGenerated && current?.status !== ProjectStatus.MaterialGenerating) {
       setShow(true);
     }
     else setShow(false);

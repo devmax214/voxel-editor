@@ -1,29 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback } from 'react';
+import { useParams } from 'next/navigation';
 import * as THREE from "three";
 import { PLYExporter } from 'three/examples/jsm/exporters/PLYExporter.js';
 import { useBasicStore, useThreeStore } from '@/store';
-import usePLYLoader from '@/hooks/usePLYLoader';
 import { Material } from 'utils/voxel';
 import { Button } from '@chakra-ui/react';
-
-const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
+import { updateMesh } from '@/Firebase/dbactions';
+import { useProjectContext } from '@/contexts/projectContext';
+import { ProjectStatus } from 'utils/types';
 
 const ImExportBar = () => {
-  const [plyFile, setPlyFile] = useState<File | null>(null);
+  const params = useParams();
+  const projectId = params?.projectId as string;
   const { viewMode } = useBasicStore();
-  const { setVoxels, setMesh, mesh } = useThreeStore();
+  const { mesh } = useThreeStore();
+  const { projects, updateProject } = useProjectContext();
+  const current = projects.find(project => project.id === projectId);
 
-  const [voxelData, imMesh] = usePLYLoader(plyFile, voxelSize);
+  const captureImage = useCallback(() => {
+    const evt = new KeyboardEvent('keyup', {
+        bubbles: true,
+        cancelable: true,
+        code: "F9"
+    });
 
-  useEffect(() => {
-    // setVoxels(voxelData);
-    setMesh(imMesh);
-  }, [voxelData, setVoxels, imMesh, setMesh]);
+    document.dispatchEvent(evt);
+  }, []);
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files?.length) {
-      setPlyFile(files[0]);
+    if (files?.length && current) {
+      await updateMesh(projectId, files[0]);
+      updateProject(projectId, { status: ProjectStatus.GeometryEditing, meshGenerated: true });
+      setTimeout(captureImage, 4000);
     }
   };
 
@@ -45,12 +54,12 @@ const ImExportBar = () => {
     }
   }
 
-  if (viewMode === 'voxel')
+  if (viewMode === 'voxel' || viewMode === 'model')
     return null;
 
   return (
     <div className="flex gap-x-2">
-      {viewMode === 'mesh' &&<div className="relative">
+      {viewMode === 'mesh' && <div className="relative">
         <input
           className="absolute w-full h-full opacity-0 z-10"
           type="file"

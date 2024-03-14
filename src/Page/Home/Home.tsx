@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -9,39 +9,38 @@ import { Text, Grid, GridItem, Box, Flex, Heading, Container } from '@chakra-ui/
 import TemplateButton from '@/Components/Elements/Buttons/TemplateButton';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useAuthContext } from '@/contexts/authContext';
-// import { createProject } from 'utils/api';
-import { createProject } from '@/Firebase/dbactions';
-import { useBasicStore, useCompletedProjects } from '@/store';
+import { createNewProject } from '@/Firebase/dbactions';
+import { useBasicStore, useCompletedProjects, useThreeStore } from '@/store';
+import { ProjectStatus } from 'utils/types';
 
 const Home = () => {
   const { user } = useAuthContext();
   const { projects, addProject } = useProjectContext();
   const { populars } = useCompletedProjects();
   const { setLoading } = useBasicStore();
+  const { setVoxels, setMesh } = useThreeStore();
   const router = useRouter();
 
-  const processingProjects = projects.filter(project => project.status !== 'Completed');
-  const completedProjects = projects.filter(project => project.status === 'Completed');
+  useEffect(() => {
+    setMesh(null);
+    setVoxels([]);
+  }, [setMesh, setVoxels]);
+
+  const stage1Projects = projects.filter(project => project.status === ProjectStatus.Blank || project.status === ProjectStatus.VoxelEditing || project.status === ProjectStatus.GeometryGenerating || project.status === ProjectStatus.GeometryFailed);
+  const stage2Projects = projects.filter(project => project.status === ProjectStatus.GeometryEditing || project.status === ProjectStatus.MaterialGenerating || project.status === ProjectStatus.MaterialFailed);
+  const stage3Projects = projects.filter(project => project.status === ProjectStatus.MaterialCompleted);
 
   const handleCreateNew = async () => {
-    if (user) {
-      setLoading(true);
-      const res: any = await createProject(user.uid);
-      addProject({
-        id: res.projectId,
-        name: 'undefined',
-        progress: 0,
-        status: 'Blank',
-        uid: user.uid,
-        voxelReqId: '',
-        voxelData: [],
-        meshReqId: '',
-        meshGenerated: false,
-        lastModified: new Date().toISOString(),
-        prompt: "",
-      });
-      setLoading(false);
-      router.push(`/editor/${res.projectId}`);
+    try {
+      if (user) {
+        setLoading(true);
+        const res: any = await createNewProject(user.uid);
+        addProject(res);
+        setLoading(false);
+        router.push(`/editor/${res.id}`);
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 
@@ -51,30 +50,36 @@ const Home = () => {
         <Heading mb={8} as={'h2'} className='text-3xl' noOfLines={1}>Enlighten Asset (Alpha)</Heading>
         <Grid mb={4} templateColumns='repeat(12, 1fr)' gap={4} w={'100%'} backgroundColor={'#f1f1f1'} borderRadius={8}>
           <GridItem colSpan={4} p={2}>
-            <Text fontSize='md'>Create New</Text>
+            <Text fontSize='md'>Create Project</Text>
             <Flex mt={3} px={2}>
               <TemplateButton text='Create New' h={16} w={160} borderColor={'gray.400'} color={'gray.400'} onClick={handleCreateNew} />
             </Flex>
           </GridItem>
         </Grid>
-        <Grid templateColumns='repeat(2, 1fr)' gap={4} w={'100%'}>
+        <Grid templateColumns='repeat(3, 1fr)' gap={4} w={'100%'}>
           <GridItem colSpan={1} backgroundColor={'#f1f1f1'} borderRadius={8} p={2}>
-            <Text fontSize='md'>3D Project in Progress</Text>
+            <Text fontSize='md'>Stage 1</Text>
             <Flex flexDirection="column" className="h-96 overflow-y-auto">
-              {processingProjects.map((project: any, index: number)=>(
-                <CardView key={`progressing ${index}`} project={project} />
+              {stage1Projects.map((project: any, index: number)=>(
+                <CardView key={`stage1_${index}`} project={project} />
               ))}
             </Flex>
-
           </GridItem>
           <GridItem colSpan={1} backgroundColor={'#f1f1f1'} borderRadius={8} p={2}>
-            <Text fontSize='md'>3D Project Completed</Text>
+            <Text fontSize='md'>Stage 2</Text>
             <Flex flexDirection="column" className="h-96 overflow-y-auto">
-              {completedProjects.map((project: any, index: number)=>(
-                <CardView key={`completed_${index}`} project={project} />
+              {stage2Projects.map((project: any, index: number)=>(
+                <CardView key={`stage2_${index}`} project={project} />
               ))}
             </Flex>
-
+          </GridItem>
+          <GridItem colSpan={1} backgroundColor={'#f1f1f1'} borderRadius={8} p={2}>
+            <Text fontSize='md'>Stage 3</Text>
+            <Flex flexDirection="column" className="h-96 overflow-y-auto">
+              {stage3Projects.map((project: any, index: number)=>(
+                <CardView key={`stage2_${index}`} project={project} />
+              ))}
+            </Flex>
           </GridItem>
         </Grid>
       </Container>

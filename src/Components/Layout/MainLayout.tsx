@@ -3,7 +3,7 @@
 import { FC, PropsWithChildren, useEffect, useState } from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { useAuthContext } from '@/contexts/authContext'
-import { useRouter } from 'next/navigation'
+import { useRouter, redirect } from 'next/navigation'
 
 import { useBasicStore, useCompletedProjects } from "@/store";
 import { Loading } from "@ui/Spinner";

@@ -7,6 +7,7 @@ import { useCompletedProjects } from '@/store';
 import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { Environment, PerspectiveCamera, Html, ContactShadows, OrbitControls } from '@react-three/drei';
 import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
+import { ProjectStatus } from 'utils/types';
 
 const SceneBackground: React.FC = () => {
   const { scene } = useThree();
@@ -34,7 +35,7 @@ const View: React.FC = () => {
   const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${projectId}&fileName=`;
 
   useEffect(() => {
-    if (current?.status === 'Completed') {
+    if (current?.status === ProjectStatus.MaterialCompleted) {
       setUrls({
         obj: `${baseURL}model.obj`,
         mtl: `${baseURL}model.mtl`,
@@ -43,7 +44,7 @@ const View: React.FC = () => {
         roughness: `${baseURL}texture_roughness.jpg`
       });
     }
-  }, [current]);
+  }, [current, baseURL]);
 
   const materials = useLoader(MTLLoader, urls.mtl);
   const obj = useLoader(

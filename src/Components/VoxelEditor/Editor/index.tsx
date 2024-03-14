@@ -1,3 +1,5 @@
+'use client'
+
 import { OrbitControls, Environment, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import InfoBox from "../InfoBox";
@@ -24,10 +26,13 @@ const Scene: React.FC = () => {
         >
           <Environment files="/models/potsdamer_platz_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 1.5, 1.5]} />
           <ambientLight intensity={0.5 * Math.PI} />
+          <PerspectiveCamera
+            makeDefault
+            position={[0, 1, 1.5]}
+          />
           <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
-            <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
+            {/* <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} /> */}
           </directionalLight>
           <Views />
           <OrbitControls makeDefault />

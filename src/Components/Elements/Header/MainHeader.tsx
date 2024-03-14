@@ -147,7 +147,7 @@ const FileActionBar = () => {
         const evt = new KeyboardEvent('keyup', {
             bubbles: true,
             cancelable: true,
-            code: "Backslash"
+            code: "F8"
         });
 
         document.dispatchEvent(evt);

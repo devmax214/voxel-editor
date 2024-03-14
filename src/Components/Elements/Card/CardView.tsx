@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Box, Flex, Progress, Text, Button, Spinner } from '@chakra-ui/react';
+import { Box, Flex, Text, Button, Spinner } from '@chakra-ui/react';
 import {
   AlertDialog,
   AlertDialogOverlay,
@@ -11,8 +11,7 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 import Link from 'next/link';
-import { Project } from 'utils/types';
-// import { removeProject, duplicateProject } from 'utils/api';
+import { Project, ProjectStatus } from 'utils/types';
 import { removeProject, duplicateProject } from '@/Firebase/dbactions';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useBasicStore } from '@/store';
@@ -22,7 +21,7 @@ const CardView = ({
 } : {
   project: Project
 }) => {
-  const { id, progress, status, uid, voxelData, name, lastModified } = project;
+  const { id, status, name, lastModified } = project;
   const { addProject, deleteProject } = useProjectContext();
   const { setLoading } = useBasicStore();
 
@@ -52,31 +51,33 @@ const CardView = ({
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
             <Box width={160} height={160} borderRadius={8} overflow={'hidden'}>
-              <Image src={status === 'Completed' ? `${baseURL}mesh.png` : status === 'Blank' ? "/default_img.png" : `${baseURL}icon.png`} alt='Image' height={160} width={160} fetchPriority='high' />
+              {status === ProjectStatus.Blank && <Image src={"/default_img.png"} alt='Image' height={160} width={160} fetchPriority='high' priority={true} />}
+              {(status === ProjectStatus.VoxelEditing || status === ProjectStatus.GeometryGenerating || status === ProjectStatus.GeometryFailed) && <Image src={`${baseURL}voxel.png`} alt='Image' height={160} width={160} fetchPriority='high' priority={true} />}
+              {(status === ProjectStatus.GeometryEditing || status === ProjectStatus.MaterialGenerating || status === ProjectStatus.MaterialFailed) && <Image src={`${baseURL}mesh.png`} alt='Image' height={160} width={160} fetchPriority='high' priority={true} />}
+              {status === ProjectStatus.MaterialCompleted && <Image src={`${baseURL}model.png`} alt='Image' height={160} width={160} fetchPriority='high' priority={true} />}
             </Box>
           </Link>
           <Box width={110}>
-            {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2 text-center">Not Started</p>}
-            {status === 'Generating' && <div className="w-[110px] px-2 text-center">
+            {(status === ProjectStatus.Blank || status === ProjectStatus.VoxelEditing || status === ProjectStatus.GeometryEditing) && <p className="w-[110px] px-2 text-center">Not Started</p>}
+            {(status === ProjectStatus.GeometryGenerating || status === ProjectStatus.MaterialGenerating) && <div className="w-[110px] px-2 text-center">
               <Spinner />
             </div>}
-            {status === 'Completed' && <p className="w-[110px] px-2 text-center">Complete</p>}
-            {status === 'Failed' && <p className="w-[110px] px-2 text-center">Failed</p>}
+            {status === ProjectStatus.MaterialCompleted && <p className="w-[110px] px-2 text-center">Complete</p>}
+            {(status === ProjectStatus.GeometryFailed || status === ProjectStatus.MaterialFailed) && <p className="w-[110px] px-2 text-center">Failed</p>}
           </Box>
           <div>
             <Text noOfLines={2} className="text-lg">{name}</Text>
             <p className="text-xs">{new Date(lastModified).toLocaleString()}</p>
+            <div className="flex gap-x-2 mt-4">
+              <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={(status === ProjectStatus.GeometryGenerating || status === ProjectStatus.MaterialGenerating)} onClick={handleDuplicate}>
+                Duplicate
+              </Button>
+              <Button variant={'solid'} size={'sm'} colorScheme='pink' isDisabled={(status === ProjectStatus.GeometryGenerating || status === ProjectStatus.MaterialGenerating)} onClick={onOpen}>
+                Delete
+              </Button>
+            </div>
           </div>
         </Flex>
-        <div className="flex gap-x-2">
-          <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={status === 'Generating'} onClick={handleDuplicate}>
-            Duplicate
-          </Button>
-          <Button variant={'solid'} size={'sm'} colorScheme='pink' isDisabled={status === 'Generating'} onClick={onOpen}>
-            Delete
-          </Button>
-        </div>
-
       </div>
       <AlertDialog motionPreset='slideInBottom' isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose} >
         <AlertDialogOverlay>

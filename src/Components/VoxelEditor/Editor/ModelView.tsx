@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import * as THREE from "three";
 import { useLoader } from "@react-three/fiber";
 import { MTLLoader, OBJLoader, mergeVertices } from "three-stdlib";
 import { ContactShadows } from "@react-three/drei";
 import { useProjectContext } from "@/contexts/projectContext";
+import { ProjectStatus } from "utils/types";
 
-const ModelView: React.FC = () => {
-  const params = useParams();
-  const projectId = params?.projectId as string;
+const ModelView = ({
+  projectId
+} : {
+  projectId: string
+}) => {
   const { projects } = useProjectContext();
   const current = projects.filter(project => project.id === projectId)[0];
   const [urls, setUrls] = useState({
@@ -22,7 +24,7 @@ const ModelView: React.FC = () => {
   const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${projectId}&fileName=`;
 
   useEffect(() => {
-    if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshGenerated) {
+    if ((current?.status === ProjectStatus.MaterialCompleted || current?.status === ProjectStatus.GeometryEditing) && current?.modelGenerated) {
       setUrls({
         obj: `${baseURL}model.obj`,
         mtl: `${baseURL}model.mtl`,
@@ -31,7 +33,7 @@ const ModelView: React.FC = () => {
         roughness: `${baseURL}texture_roughness.jpg`
       });
     }
-  }, [current]);
+  }, [current, baseURL]);
 
   // const { nodes, materials } = useGLTF("/models/model1.glb");
   // // if (!mesh)
@@ -82,7 +84,6 @@ const ModelView: React.FC = () => {
         <mesh
           castShadow
           receiveShadow
-          rotation={[Math.PI * 3 / 2, 0, 0]}
           geometry={geometry}
         >
           <meshPhysicalMaterial

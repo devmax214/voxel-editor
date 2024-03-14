@@ -5,6 +5,7 @@ import MeshCase from './MeshCase';
 import ModelCase from './ModelCase';
 import { useBasicStore } from '@/store';
 import { useProjectContext } from '@/contexts/projectContext';
+import { ProjectStatus } from 'utils/types';
 
 const PromptEditor = () => {
   const params = useParams();
@@ -15,9 +16,9 @@ const PromptEditor = () => {
 
   useEffect(() => {
     if (current){
-      if (current?.status === 'Material Completed' || current?.status === 'Material Generating')
+      if (current?.status === ProjectStatus.MaterialCompleted || current?.status === ProjectStatus.MaterialGenerating)
         setViewMode('model');
-      else if (current?.status === 'Geometry Editing' || current?.status === 'Geometry Generating' || current?.status === 'Material Failed')
+      else if (current?.status === ProjectStatus.GeometryEditing || current?.status === ProjectStatus.GeometryGenerating || current?.status === ProjectStatus.MaterialFailed)
         setViewMode('mesh');
       else setViewMode('voxel');
     }

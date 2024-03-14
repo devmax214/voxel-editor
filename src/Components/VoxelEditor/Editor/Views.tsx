@@ -1,32 +1,27 @@
-import { useEffect, useCallback, Suspense } from "react";
+import { Suspense } from "react";
 import { useParams } from "next/navigation";
-import { useThree } from "@react-three/fiber";
 import { Html, OrbitControls } from "@react-three/drei";
-import { useToast } from "@chakra-ui/react";
-import MeshView from "./MeshView";
 import VoxelView from "./VoxelView";
+import MeshView from "./MeshView";
 import ModelView from "./ModelView";
-import { useAuthContext } from "@/contexts/authContext";
-import { useProjectContext } from "@/contexts/projectContext";
-import { useBasicStore, useThreeStore } from "@/store";
+import { useBasicStore } from "@/store";
 
 const Views: React.FC = () => {
   const params = useParams();
   const projectId = params?.projectId as string;
   const { viewMode } = useBasicStore();
-  const { voxels, mesh } = useThreeStore();
 
   return (
     <>
       {viewMode === 'voxel' && <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-        <VoxelView  />
+        <VoxelView projectId={projectId} />
       </Suspense>}
       {viewMode === 'mesh' && <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-        <MeshView mesh={mesh} />
+        <MeshView projectId={projectId} />
       </Suspense>}
       {viewMode === 'model' && <>
         <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
-          <ModelView />
+          <ModelView projectId={projectId} />
         </Suspense>
         <OrbitControls minPolarAngle={0} maxPolarAngle={Math.PI / 2} />
       </>}

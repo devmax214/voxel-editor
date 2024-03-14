@@ -14,10 +14,11 @@ import { requestMesh } from 'utils/apiCall';
 import { saveVoxelReqId, changeProjectName, getUserInfo } from '@/Firebase/dbactions';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useThreeStore, useBasicStore } from '@/store';
-import { delay } from 'utils/utils';
+import { delay, voxelSize } from 'utils/utils';
 import { getStatusById } from 'utils/apiCall';
 import { useAuthContext } from '@/contexts/authContext';
 import { Project } from 'utils/types';
+import useMeshReqStatus from '@/hooks/useMeshReqStatus';
 
 const VoxelCase = ({
   projectId,
@@ -32,7 +33,7 @@ const VoxelCase = ({
   const [meshData, setMeshData] = useState(null);
   const { updateProject } = useProjectContext();
   const { voxels, setVoxels, setMesh } = useThreeStore();
-  const { setMeshReqStatus, setLoading, setViewMode, viewMode } = useBasicStore();
+  const { setMeshReqStatus, setLoading, setViewMode } = useBasicStore();
 
   useEffect(() => {
     const savedId = window.localStorage.getItem(projectId);
@@ -45,11 +46,17 @@ const VoxelCase = ({
   const alert = useDisclosure();
   const cancelRef = useRef(null);
 
+  const [voxelData] = useMeshReqStatus(meshData, voxelSize);
+
+  useEffect(() => {
+    setVoxels(voxelData);
+  }, [voxelData, setVoxels]);
+
   const handleSave = useCallback(() => {
     const evt = new KeyboardEvent('keyup', {
         bubbles: true,
         cancelable: true,
-        code: "Backslash"
+        code: "F8"
     });
 
     document.dispatchEvent(evt);

@@ -11,8 +11,14 @@ import {
   deleteDoc,
   orderBy
 } from "firebase/firestore";
+import {
+  ref,
+  getStorage,
+  uploadBytes,
+  uploadString
+} from "firebase/storage";
 import { app } from "./config";
-import { Voxel } from "utils/types";
+import { Voxel, ProjectStatus } from "utils/types";
 
 const db = getFirestore(app);
 
@@ -44,16 +50,18 @@ export const getProjectsByUid = async (uid: string) => {
   }
 }
 
-export const createProject = async (uid: string) => {
+export const createNewProject = async (uid: string) => {
   try {
     const project = {
       name: 'undefined',
-      status: 'Blank',
+      status: ProjectStatus.Blank,
       uid: uid,
       prompt: "",
       voxelReqId: '',
       meshReqId: '',
       modelReqId: '',
+      voxelGenerated: false,
+      meshGenerated: false,
       modelGenerated: false,
       lastModified: new Date().toISOString(),
     };
@@ -110,20 +118,25 @@ export const voxelCreated = async (
   projectId: string,
   usedPrice: number,
   voxelData: Voxel[],
-  file: string,
+  iconData: Blob,
   prompt: string
 ) => {
   try {
+    const storage = getStorage();
+    const iconRef = ref(storage, `${projectId}/voxel.png`);
+    await uploadBytes(iconRef, iconData);
+    const voxelRef = ref(storage, `${projectId}/voxel.json`);
+    await uploadString(voxelRef, JSON.stringify(voxelData));
     const userRef = doc(db, 'users', uid);
     const userData = (await getDoc(userRef)).data();
+
     await updateDoc(userRef, {
       'billing.compute_unit': userData?.billing.compute_unit - usedPrice
     });
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
-      imageLink: file,
-      status: "Editing",
-      voxelData: voxelData,
+      voxelGenerated: true,
+      status: ProjectStatus.VoxelEditing,
       lastModified: new Date().toISOString(),
       prompt: prompt
     });
@@ -141,14 +154,16 @@ export const voxelCreated = async (
 export const updateVoxel = async (
   projectId: string,
   voxelData: Voxel[],
-  status: string,
   prompt: string
 ) => {
   try {
+    const storage = getStorage();
+    const voxelRef = ref(storage, `${projectId}/voxel.json`);
+    await uploadString(voxelRef, JSON.stringify(voxelData));
+
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
-      status: status,
-      voxelData: voxelData,
+      status: ProjectStatus.VoxelEditing,
       lastModified: new Date().toISOString(),
       prompt: prompt
     });
@@ -157,6 +172,40 @@ export const updateVoxel = async (
       message: "Successfully saved Voxel Data",
       project: projectData
     }
+  } catch (error) {
+    console.log(error);
+    return error;
+  }
+}
+
+export const updateMesh = async (
+  projectId: string,
+  plyFile: File,
+) => {
+  try {
+    const storage = getStorage();
+    const meshRef = ref(storage, `${projectId}/mesh.ply`);
+    await uploadBytes(meshRef, plyFile);
+
+    const projectRef = doc(db, 'projects', projectId);
+    await updateDoc(projectRef, {
+      meshGenerated: true,
+      status: ProjectStatus.GeometryEditing,
+      lastModified: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export const saveMeshIcon = async (
+  projectId: string,
+  iconData: Blob,
+) => {
+  try {
+    const storage = getStorage();
+    const iconRef = ref(storage, `${projectId}/mesh.png`);
+    await uploadBytes(iconRef, iconData);
   } catch (error) {
     console.log(error);
     return error;
@@ -194,7 +243,7 @@ export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
 
 export const getCompletedProjects = async () => {
   try {
-    const q = query(collection(db, "projects"), where("status", "==", "Completed"), orderBy("lastModified", "desc"));
+    const q = query(collection(db, "projects"), where("status", "==", ProjectStatus.MaterialCompleted), orderBy("lastModified", "desc"));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from 'next/navigation';
@@ -9,27 +9,32 @@ import { Text, Grid, GridItem, Box, Flex, Heading, Container } from '@chakra-ui/
 import TemplateButton from '@/Components/Elements/Buttons/TemplateButton';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useAuthContext } from '@/contexts/authContext';
-// import { createProject } from 'utils/api';
-import { createProject } from '@/Firebase/dbactions';
-import { useBasicStore, useCompletedProjects } from '@/store';
+import { createNewProject } from '@/Firebase/dbactions';
+import { useBasicStore, useCompletedProjects, useThreeStore } from '@/store';
+import { ProjectStatus } from 'utils/types';
 
 const Home = () => {
   const { user } = useAuthContext();
   const { projects, addProject } = useProjectContext();
   const { populars } = useCompletedProjects();
   const { setLoading } = useBasicStore();
+  const { setVoxels, setMesh } = useThreeStore();
   const router = useRouter();
 
-  const stage1Projects = projects.filter(project => project.status === 'Blank' || project.status === 'Voxel Editing' || project.status === 'Geometry Generating' || project.status === 'Geometry Failed');
-  const stage2Projects = projects.filter(project => project.status === 'Geometry Editing' || project.status === 'Material Generating' || project.status === 'Material Failed');
-  const stage3Projects = projects.filter(project => project.status === 'Material Completed');
+  useEffect(() => {
+    setMesh(null);
+    setVoxels([]);
+  }, [setMesh, setVoxels]);
+
+  const stage1Projects = projects.filter(project => project.status === ProjectStatus.Blank || project.status === ProjectStatus.VoxelEditing || project.status === ProjectStatus.GeometryGenerating || project.status === ProjectStatus.GeometryFailed);
+  const stage2Projects = projects.filter(project => project.status === ProjectStatus.GeometryEditing || project.status === ProjectStatus.MaterialGenerating || project.status === ProjectStatus.MaterialFailed);
+  const stage3Projects = projects.filter(project => project.status === ProjectStatus.MaterialCompleted);
 
   const handleCreateNew = async () => {
     try {
       if (user) {
         setLoading(true);
-        const res: any = await createProject(user.uid);
-        console.log(res);
+        const res: any = await createNewProject(user.uid);
         addProject(res);
         setLoading(false);
         router.push(`/editor/${res.id}`);

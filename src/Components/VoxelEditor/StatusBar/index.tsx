@@ -9,7 +9,7 @@ const StatusBar = () => {
       <div className="flex gap-x-8">
         <ViewModeSwitcher />
         <PromptEditor />
-        {/* <ImExportBar /> */}
+        <ImExportBar />
       </div>
     </div>
   )

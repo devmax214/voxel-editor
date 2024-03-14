@@ -23,7 +23,7 @@ import { startStage2 } from 'utils/api';
 import { getUserInfo, checkStatus } from '@/Firebase/dbactions';
 import { useThreeStore, useBasicStore } from '@/store';
 import { delay, voxelSize } from 'utils/utils';
-import type { Project } from 'utils/types';
+import{ type Project, ProjectStatus } from 'utils/types';
 
 const ModelCase = ({
   projectId,
@@ -53,7 +53,7 @@ const ModelCase = ({
   }, [user, setUserInfo]);
 
   useEffect(() => {
-    if (current.status === "Geometry Editing" && current.modelGenerated) {
+    if (current.status === ProjectStatus.GeometryEditing && current.modelGenerated) {
       outDated.onOpen();
     }
   }, [current]);
@@ -64,19 +64,19 @@ const ModelCase = ({
     const checkReq = async () => {
       const res = await checkStatus(projectId) as Project;
       if (res) {
-        if (res.status === "Material Generating") {
+        if (res.status === ProjectStatus.MaterialGenerating) {
           await delay(10000);
           checkReq();
         }
-        else if (res.status === "Material Completed") {
+        else if (res.status === ProjectStatus.MaterialCompleted) {
           setViewMode('model');
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();
           setIsGenerating(false);
         }
-        else if (res.status === "Material Failed") {
+        else if (res.status === ProjectStatus.MaterialFailed) {
           setViewMode('mesh');
-          updateProject(projectId, {status: "Material Failed"});
+          updateProject(projectId, {status: ProjectStatus.MaterialFailed});
           window.sessionStorage.removeItem(projectId);
           updateUserInfo();
           setIsGenerating(false);
@@ -102,7 +102,7 @@ const ModelCase = ({
     // document.body.removeChild(link);
     try {
       setIsGenerating(true);
-      updateProject(projectId, {status: "Material Generating"});
+      updateProject(projectId, {status: ProjectStatus.MaterialGenerating});
       await startStage2(projectId, current?.prompt, vertices);
       updateUserInfo();
       outDated.onClose();

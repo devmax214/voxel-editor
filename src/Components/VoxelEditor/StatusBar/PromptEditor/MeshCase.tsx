@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertDialog,
   AlertDialogOverlay,
@@ -20,6 +20,11 @@ const MeshCase = ({
   current: Project
 }) => {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
+  const [propmt, setPrompt] = useState<string>('');
+
+  useEffect(() => {
+    setPrompt(current?.prompt);
+  }, [current]);
 
   const alert = useDisclosure();
   const cancelRef = React.useRef(null);
@@ -31,12 +36,12 @@ const MeshCase = ({
   return (
     <div>
       <div className="flex gap-x-2">
-        <Input placeholder="Propmt" isDisabled={true} value={current?.prompt} />
+        <Input placeholder="Propmt" value={propmt} onChange={e => setPrompt(e.target.value)} />
         <Button
           className='w-44'
           colorScheme='blue'
           onClick={alert.onOpen}
-          isDisabled={isGenerating}
+          isDisabled={!propmt || !current.voxelGenerated}
           isLoading={isGenerating}
         >
           Generate Mesh

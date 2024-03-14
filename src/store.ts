@@ -6,8 +6,8 @@ interface BasicState {
   loading: boolean;
   setLoading: (loading: boolean) => void;
 
-  viewMode: string;
-  setViewMode: (viewMode: string) => void;
+  viewMode: "voxel" | "mesh" | "model";
+  setViewMode: (viewMode: "voxel" | "mesh" | "model") => void;
 
   meshReqStatus: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'RETRIED' | '';
   setMeshReqStatus: (meshReqStatus: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'RETRIED' | '') => void;
@@ -18,7 +18,7 @@ interface BasicState {
 
 export const useBasicStore = create<BasicState>((set) => ({
   viewMode: 'voxel',
-  setViewMode: (viewMode: string) => set({ viewMode }),
+  setViewMode: (viewMode: "voxel" | "mesh" | "model") => set({ viewMode }),
 
   loading: false,
   setLoading: (loading: boolean) => set({ loading }),

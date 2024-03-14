@@ -29,3 +29,7 @@ export const cropToSquare = async (blob: Blob) => {
     image.src = url;
   });
 }
+
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+export const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);

@@ -13,7 +13,7 @@ const ModelTip = () => {
   const current = projects.filter(project => project.id === projectId)[0];
 
   useEffect(() => {
-    if (!current?.meshGenerated && current?.status !== 'Generating') {
+    if (!current?.meshGenerated && current?.status !== "Material Generating") {
       setShow(true);
     }
     else setShow(false);

@@ -5,8 +5,7 @@ import { useBasicStore, useThreeStore } from '@/store';
 import usePLYLoader from '@/hooks/usePLYLoader';
 import { Material } from 'utils/voxel';
 import { Button } from '@chakra-ui/react';
-
-const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
+import { voxelSize } from 'utils/utils';
 
 const ImExportBar = () => {
   const [plyFile, setPlyFile] = useState<File | null>(null);

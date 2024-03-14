@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { MainLayout } from "@/Components/Layout/MainLayout";
 import { AuthContextProvider } from "@/contexts/authContext";
 import { ProjectContextProvider } from "@/contexts/projectContext";
+import { auth } from "@/Firebase/config";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +22,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = auth.currentUser;
+
+  if (user!) {
+    redirect('/login');
+  }
+
   return (
     <html lang="en">
       <body className={inter.className}>

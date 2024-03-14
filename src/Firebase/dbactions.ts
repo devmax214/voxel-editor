@@ -47,22 +47,19 @@ export const getProjectsByUid = async (uid: string) => {
 export const createProject = async (uid: string) => {
   try {
     const project = {
-      name: "undefined",
+      name: 'undefined',
+      status: 'Blank',
       uid: uid,
-      status: "Blank",
-      progress: 0,
-      voxelReqId: "",
-      voxelData: [],
-      imageLink: "",
-      meshReqId: "",
-      meshLink: "",
-      lastModified: new Date().toISOString(),
       prompt: "",
-      meshGenerated: false
+      voxelReqId: '',
+      meshReqId: '',
+      modelReqId: '',
+      modelGenerated: false,
+      lastModified: new Date().toISOString(),
     };
     const projectsRef = collection(db, 'projects');
     const projectRef = await addDoc(projectsRef, project);
-    return {projectId: projectRef.id};
+    return {id: projectRef.id, ...project};
   } catch (error) {
     console.log(error);
     return error;

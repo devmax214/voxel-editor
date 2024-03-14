@@ -22,7 +22,7 @@ const CardView = ({
 } : {
   project: Project
 }) => {
-  const { id, progress, status, uid, voxelData, name, lastModified } = project;
+  const { id, status, name, lastModified } = project;
   const { addProject, deleteProject } = useProjectContext();
   const { setLoading } = useBasicStore();
 
@@ -52,31 +52,30 @@ const CardView = ({
         <Flex position={'relative'} m={2} alignItems={'center'}>
           <Link href={`/editor/${id}`}>
             <Box width={160} height={160} borderRadius={8} overflow={'hidden'}>
-              <Image src={status === 'Completed' ? `${baseURL}mesh.png` : status === 'Blank' ? "/default_img.png" : `${baseURL}icon.png`} alt='Image' height={160} width={160} fetchPriority='high' />
+              <Image src={status === 'Material Completed' ? `${baseURL}mesh.png` : status === 'Blank' ? "/default_img.png" : `${baseURL}icon.png`} alt='Image' height={160} width={160} fetchPriority='high' />
             </Box>
           </Link>
           <Box width={110}>
-            {(status === 'Blank' || status === 'Editing') && <p className="w-[110px] px-2 text-center">Not Started</p>}
-            {status === 'Generating' && <div className="w-[110px] px-2 text-center">
+            {(status === 'Blank' || status === "Voxel Editing" || status === "Geometry Editing") && <p className="w-[110px] px-2 text-center">Not Started</p>}
+            {(status === "Geometry Generating" || status === "Material Generating") && <div className="w-[110px] px-2 text-center">
               <Spinner />
             </div>}
-            {status === 'Completed' && <p className="w-[110px] px-2 text-center">Complete</p>}
-            {status === 'Failed' && <p className="w-[110px] px-2 text-center">Failed</p>}
+            {status === "Material Completed" && <p className="w-[110px] px-2 text-center">Complete</p>}
+            {(status === "Geometry Failed" || status === "Material Failed") && <p className="w-[110px] px-2 text-center">Failed</p>}
           </Box>
           <div>
             <Text noOfLines={2} className="text-lg">{name}</Text>
             <p className="text-xs">{new Date(lastModified).toLocaleString()}</p>
+            <div className="flex gap-x-2 mt-4">
+              <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={(status === 'Geometry Generating' || status === 'Material Generating')} onClick={handleDuplicate}>
+                Duplicate
+              </Button>
+              <Button variant={'solid'} size={'sm'} colorScheme='pink' isDisabled={(status === 'Geometry Generating' || status === 'Material Generating')} onClick={onOpen}>
+                Delete
+              </Button>
+            </div>
           </div>
         </Flex>
-        <div className="flex gap-x-2">
-          <Button variant={'outline'} size={'sm'} colorScheme='blue' isDisabled={status === 'Generating'} onClick={handleDuplicate}>
-            Duplicate
-          </Button>
-          <Button variant={'solid'} size={'sm'} colorScheme='pink' isDisabled={status === 'Generating'} onClick={onOpen}>
-            Delete
-          </Button>
-        </div>
-
       </div>
       <AlertDialog motionPreset='slideInBottom' isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose} >
         <AlertDialogOverlay>

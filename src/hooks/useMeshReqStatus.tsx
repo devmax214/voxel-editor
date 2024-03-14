@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import * as THREE from "three";
-import { voxelizeMesh, Material } from "utils/voxel";
+import { voxelizeMesh } from "utils/voxel";
 import { useBasicStore } from "@/store";
 
 type Vertex = [number, number, number];

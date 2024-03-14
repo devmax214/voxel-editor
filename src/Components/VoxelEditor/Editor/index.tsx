@@ -1,3 +1,5 @@
+'use client'
+
 import { OrbitControls, Environment, PerspectiveCamera } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import InfoBox from "../InfoBox";

@@ -7,13 +7,13 @@ export type Voxel = {
 export type Project = {
   id: string;
   name: string;
-  progress: number;
-  status: "Blank" | "Editing" | "Generating" | "Completed" | "Failed";
+  status: "Blank" | "Voxel Editing" | "Geometry Generating" | "Geometry Failed" | "Geometry Editing" | "Material Generating" | "Material Failed" | "Material Completed";
   uid: string;
-  voxelReqId: string;
-  voxelData: Voxel[];
-  meshReqId: string;
-  meshGenerated: boolean;
-  lastModified: string;
   prompt: string;
+  voxelReqId: string;
+  meshReqId: string;
+  modelReqId: string;
+  meshGenerated: boolean;
+  modelGenerated: boolean;
+  lastModified: string;
 }

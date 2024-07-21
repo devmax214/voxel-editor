@@ -22,7 +22,9 @@ const MainHeader = (props: GridProps) => {
     return (
         <NavBarContainer {...props}>
             <div className="flex items-center gap-x-4">
-                <Image priority={true} src={"/logo_white.png"} alt="logo" width={70} height={70} className="h-auto" />
+                <a href="https://enlighten3d.io">
+                    <Image priority={true} src={"/logo_white.png"} alt="logo" width={70} height={70} className="h-auto" />
+                </a>
                 <MenuLinks isOpen={isOpen} />
             </div>
             {pathName?.startsWith('/editor') && <div className="flex items-center gap-x-10">
@@ -60,7 +62,8 @@ const MenuLinks = ({ isOpen }: { isOpen: boolean }) => {
                 direction={["column", "row", "row", "row"]}
                 pt={[4, 4, 0, 0]}
             >
-                <MenuItem to="/">Home</MenuItem>
+                <MenuItem to="https://enlighten3d.io">Home</MenuItem>
+                <MenuItem to="/">Console</MenuItem>
             </Stack>
         </Box>
     );

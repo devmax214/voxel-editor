@@ -13,7 +13,10 @@ interface BasicState {
   setMeshReqStatus: (meshReqStatus: 'COMPLETED' | 'FAILED' | 'IN_PROGRESS' | 'IN_QUEUE' | 'RETRIED' | '') => void;
 
   removeMode: boolean;
-  setRemoveMode: (addMode: boolean) => void;
+  setRemoveMode: (removeMode: boolean) => void;
+
+  useNormalMap: boolean;
+  setUseNormalMap: (useNormalMap: boolean) => void;
 }
 
 export const useBasicStore = create<BasicState>((set) => ({
@@ -28,6 +31,9 @@ export const useBasicStore = create<BasicState>((set) => ({
 
   removeMode: false,
   setRemoveMode: (removeMode: boolean) => set({ removeMode }),
+
+  useNormalMap: false,
+  setUseNormalMap: (useNormalMap: boolean) => set({ useNormalMap }),
 }));
 
 interface ThreeState {

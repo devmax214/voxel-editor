@@ -11,8 +11,9 @@ import { mergeVertices, OBJLoader, MTLLoader } from "three-stdlib";
 const SceneBackground: React.FC = () => {
   const { scene } = useThree();
 
+  // white color
   useEffect(() => {
-    scene.background = new THREE.Color('lightgrey');
+    scene.background = new THREE.Color("#ffffff");
   }, [scene]);
 
   return null;
@@ -78,7 +79,7 @@ const View: React.FC = () => {
           <mesh
             castShadow
             receiveShadow
-            rotation={[Math.PI * 3 / 2, 0, 0]}
+            rotation={[0, 0, 0]}
             geometry={geometry}
           >
             <meshPhysicalMaterial
@@ -89,7 +90,7 @@ const View: React.FC = () => {
               metalnessMap={metallicnessMap}
             />
           </mesh>
-          <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
+          <ContactShadows opacity={0.5} blur={3} scale={4} far={20} resolution={256} position={[0, bounds.min.y, 0]} />
         </group>
         :
         <group>
@@ -109,13 +110,13 @@ const Scene: React.FC = () => {
           frameloop="demand"
           gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance', antialias: true }}
         >
-          <Environment files="/models/potsdamer_platz_1k.hdr" />
+          <Environment files="/models/mud_road_puresky_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 1.5, 1.5]} />
-          <ambientLight intensity={0.5 * Math.PI} />
-          <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
+          <PerspectiveCamera makeDefault position={[0, 2, 2]} />
+          <ambientLight intensity={0} />
+          {/* <directionalLight castShadow position={[2.5, 4, 5]} intensity={2} shadow-mapSize={1024}>
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
-          </directionalLight>
+          </directionalLight> */}
           <Suspense fallback={<Html center><p className="text-2xl">Loading...</p></Html>}>
             <View />
           </Suspense>

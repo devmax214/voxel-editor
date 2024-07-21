@@ -56,7 +56,7 @@ const InfoBox = () => {
     <div className="fixed top-40 z-10 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
       <Alert status='info' className="rounded-lg">
         <p>
-          It takes around 30 sec to generate, wait patiently.
+          It takes up to 30 sec to generate voxel, wait patiently.
         </p>
       </Alert>
     </div>

@@ -2,6 +2,7 @@ import {
   getFirestore,
   collection,
   query,
+  limit,
   where,
   getDocs,
   doc,
@@ -197,7 +198,7 @@ export const saveVoxelReqId = async (projectId: string, voxelReqId: string) => {
 
 export const getCompletedProjects = async () => {
   try {
-    const q = query(collection(db, "projects"), where("status", "==", "Completed"), orderBy("lastModified", "desc"));
+    const q = query(collection(db, "projects"), where("status", "==", "Completed"), orderBy("lastModified", "desc"), limit(24));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];

@@ -184,7 +184,9 @@ const Login = () => {
           <Image alignSelf="center" src='/short-height-logo.png' height="80px" width="80px" alt='miniLogo' />
           
           <Heading fontSize={26} textAlign="center" color="">Welcome to Enlighten 3D</Heading>
-          <Text fontSize={14} textAlign="center" color="">Enter your email and password to get started.</Text>
+          <Text fontSize={14} textAlign="center" color="">
+            If you don&apos;t have an Alpha testing account, <br /> RSVP <a href="https://enlighten3d.io/object" style={{ textDecoration:'underline'}}>here</a>.
+          </Text>
           <FormControl _focus={{borderColor: "yellow.800"}}>
             <InputGroup borderColor="yellow.600" _hover={{borderColor: "yellow.400"}}>
               <InputLeftElement

@@ -46,9 +46,9 @@ const VoxelsView: React.FC<VoxelsProps> = ({ voxels }) => {
     normalMap: normalMap,
     specularColorMap: metalnessMap,
     roughnessMap: glossMap,
-    reflectivity: 0.5,
-    roughness: 0.8,
-    metalness: 0.3
+    reflectivity: 0,
+    roughness: 0.9,
+    metalness: 0
   }), [aoMap, colMap, normalMap, metalnessMap, glossMap]);
   const ref = useRef<THREE.InstancedMesh>(null);
   const { raycaster, mouse, camera } = useThree();
@@ -196,6 +196,8 @@ const ModelView: React.FC = () => {
 
   const baseURL = `${process.env.NEXT_PUBLIC_SERVER_BASE_URL}/getAsset?projectId=${projectId}&fileName=`;
 
+  const { useNormalMap } = useBasicStore(state => ({ useNormalMap: state.useNormalMap }));
+
   useEffect(() => {
     if ((current?.status === 'Completed' || current?.status === 'Editing') && current?.meshGenerated) {
       setUrls({
@@ -206,17 +208,7 @@ const ModelView: React.FC = () => {
         roughness: `${baseURL}texture_roughness.jpg`
       });
     }
-  }, [current]);
-
-  // const { nodes, materials } = useGLTF("/models/model1.glb");
-  // // if (!mesh)
-  // //   return null;
-  // const material = materials.default;
-  // let geometry = (nodes.object as THREE.Mesh).geometry as THREE.BufferGeometry;
-  // geometry.deleteAttribute("normal");
-  // geometry = mergeVertices(geometry);
-  // geometry.computeVertexNormals();
-  // material.side = THREE.DoubleSide;
+  }, [current, baseURL]);
 
   const materials = useLoader(MTLLoader, urls.mtl);
   const obj = useLoader(
@@ -238,59 +230,53 @@ const ModelView: React.FC = () => {
 
   let objMesh = obj.children[0] as THREE.Mesh;
   let geometry = objMesh.geometry;
-  geometry.deleteAttribute("normal");
+
+  // Merge vertices to ensure smooth normals
   geometry = mergeVertices(geometry);
+  // Compute vertex normals for smooth shading
   geometry.computeVertexNormals();
 
   const bounds = new THREE.Box3().setFromObject(obj);
-  // const bounds = new THREE.Box3().setFromObject(nodes.object as THREE.Mesh);
 
   return (
     <>
-      {urls.obj ?
-      // <mesh
-      //   rotation={[Math.PI * 3 / 2, 0, 0]}
-      //   geometry={mesh}
-      //   material={Material}
-      // />
-      <group>
-        <mesh
-          castShadow
-          receiveShadow
-          rotation={[Math.PI * 3 / 2, 0, 0]}
-          geometry={geometry}
-        >
-          <meshPhysicalMaterial
-            side={THREE.DoubleSide}
-            attach={'material'}
-            map={textureMap}
-            roughnessMap={roughnessMap}
-            metalnessMap={metallicnessMap}
-          />
-        </mesh>
-        {/* <mesh
-          castShadow
-          rotation={[Math.PI * 3 / 2, 0, 0]}
-          geometry={geometry}
-          material={material}
-        /> */}
-        {/* <AccumulativeShadows frames={200} alphaTest={0.7} scale={10} position={[0, bounds.min.z, 0]}>
-          <RandomizedLight amount={4} radius={9} intensity={2} ambient={0.25} position={[0, 10, 0]} />
-          <RandomizedLight amount={4} radius={5} intensity={1} ambient={0.55} position={[0, 5, 0]} />
-        </AccumulativeShadows> */}
-        <ContactShadows blur={2} scale={10} far={20} resolution={256} position={[0, bounds.min.z, 0]} />
-      </group>
-      :
-      <group></group>}
+      {urls.obj ? (
+        <group>
+          <mesh
+            castShadow
+            receiveShadow
+            rotation={[0, Math.PI * 3 / 2, 0]}
+            geometry={geometry}
+          >
+            {useNormalMap ? (
+              <meshNormalMaterial
+                attach="material"
+                side={THREE.DoubleSide}
+              />
+            ) : (
+              <meshPhysicalMaterial
+                attach="material"
+                side={THREE.DoubleSide}
+                map={textureMap}
+                roughnessMap={roughnessMap}
+                metalnessMap={metallicnessMap}
+              />
+            )}
+          </mesh>
+          <ContactShadows opacity={0.5} blur={3} scale={4} far={20} resolution={256} position={[0, bounds.min.y, 0]} />
+        </group>
+      ) : (
+        <group></group>
+      )}
     </>
-  )
+  );
 }
 
 const SceneBackground: React.FC = () => {
   const { scene } = useThree();
 
   useEffect(() => {
-    scene.background = new THREE.Color('lightgrey');
+    scene.background = new THREE.Color('#ffffff');
   }, [scene]);
 
   return null;
@@ -409,15 +395,16 @@ const Scene: React.FC = () => {
           flat={true}
           dpr={[1, 1]}
           frameloop="demand"
-          gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance', antialias: true }}
+          gl={{ preserveDrawingBuffer: true, powerPreference: 'high-performance', antialias: false }}
         >
-          <Environment files="/models/potsdamer_platz_1k.hdr" />
+          <Environment files="/models/mud_road_puresky_1k.hdr" />
           <SceneBackground />
-          <PerspectiveCamera makeDefault position={[0, 1.5, 1.5]} />
-          <ambientLight intensity={0.5 * Math.PI} />
-          <directionalLight castShadow position={[2.5, 4, 5]} intensity={3} shadow-mapSize={1024}>
+          <PerspectiveCamera makeDefault position={[0, 2.0, 2.0]} />
+          <ambientLight intensity={0} />
+          {/* <ambientLight intensity={0.5 * Math.PI} /> */}
+          {/* <directionalLight castShadow position={[2.5, 4, 5]} intensity={1} shadow-mapSize={1024}>
             <orthographicCamera attach="shadow-camera" args={[-10, 10, -10, 10, 0.1, 50]} />
-          </directionalLight>
+          </directionalLight> */}
           <Views />
           <OrbitControls makeDefault />
         </Canvas>

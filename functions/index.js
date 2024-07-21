@@ -177,7 +177,7 @@ const SECOND_AI_API_BASEURL = "https://api.runpod.ai/v2/gg3lo31p6vvlb0";
 const API_KEY = "7TY4F9VDBMPKWBIAXSKM8P4Q2HBOJUU65M8LFFVW";
 const FIREBASE_CLOUD_BASEURL = "https://us-central1-enlighten-3d-backend.cloudfunctions.net";
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-const DEFAULT_REQ_CREDIT = 60;
+const DEFAULT_REQ_CREDIT = 75;
 
 exports.startStage2 = functions.https.onRequest(async (req,res) => {
   cors(req, res, async ()=>{
@@ -354,7 +354,7 @@ exports.removeProject = functions.https.onRequest(async (req, res) => {
   })
 });
 
-exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.topic(topicName).onPublish(async (message, context) => {
+exports.processAIRequest = functions.runWith({ timeoutSeconds: 9000 }).pubsub.topic(topicName).onPublish(async (message, context) => {
   const messageData = JSON.parse(Buffer.from(message.data, 'base64').toString());
   const projectId = messageData.projectId;
   const projectPrompt = messageData.prompt;
@@ -385,7 +385,7 @@ exports.processAIRequest = functions.runWith({ timeoutSeconds: 540 }).pubsub.top
   
     while (res.status !== 'COMPLETED') {
       console.log('checked', res.status);
-      await delay(10000);
+      await delay(600000);
       const checkProject = await fetch(`${SECOND_AI_API_BASEURL}/status/${res.id}`, {
         method: 'GET',
         headers: {

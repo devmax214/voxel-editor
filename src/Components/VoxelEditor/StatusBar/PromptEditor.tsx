@@ -250,7 +250,7 @@ const PromptEditor = () => {
           <PopoverContent>
             <PopoverArrow />
             <PopoverBody>
-              <p className="text-sm">Mesh is outdated, click here to regenerate</p>
+              <p className="text-sm">Click here to re-generate</p>
             </PopoverBody>
           </PopoverContent>
         </Popover>}
@@ -263,7 +263,7 @@ const PromptEditor = () => {
               {viewMode === 'voxel' ? 'Override voxel' : 'Generate Model'}
             </AlertDialogHeader>
             <AlertDialogBody>
-              {viewMode === 'voxel' ? 'Are you sure? This will override voxel in the editor.' : 'Are you sure? This process can take approximately 60 minutes and 60 credits for mesh generation. You can leave page and come back later.'}
+              {viewMode === 'voxel' ? 'Are you sure? This will override voxel in the editor.' : 'Are you sure? This process can take around 75 minutes and 75 credits for mesh generation. You can leave page and come back later.'}
             </AlertDialogBody>
             <AlertDialogFooter>
               <Button ref={cancelRef} onClick={alert.onClose}>

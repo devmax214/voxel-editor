@@ -125,7 +125,7 @@ const Home = () => {
         <Box p={3} backgroundColor={'#f1f1f1'} borderRadius={15}>
           <Text fontSize='md'>Latest Public Assets</Text>
           <Grid templateColumns='repeat(8, 1fr)' p={3} gap={3} w={'100%'}>
-            {populars.slice(0, 24).map((popular, index) => (
+            {(populars && populars.length > 0 ? populars.slice(0, 24) : []).map((popular, index) => (
               <GridItem key={`popular_${index}`}>
                 <Box borderRadius={8} overflow={'hidden'}>
                   <Link href={`/view/${popular.id}`}>

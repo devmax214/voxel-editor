@@ -11,7 +11,8 @@ export type Project = {
   status: "Blank" | "Editing" | "Generating" | "Completed" | "Failed";
   uid: string;
   voxelReqId: string;
-  voxelData: Voxel[];
+  // voxelData: Voxel[];
+  voxelDataLink: string;
   meshReqId: string;
   meshGenerated: boolean;
   lastModified: string;

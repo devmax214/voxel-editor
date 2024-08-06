@@ -14,6 +14,8 @@ import {
 } from "firebase/firestore";
 import { app } from "./config";
 import { Voxel } from "utils/types";
+import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { storage } from "./config";
 
 const db = getFirestore(app);
 
@@ -31,7 +33,7 @@ export const getUserInfo = async (uid: string) => {
 
 export const getProjectsByUid = async (uid: string) => {
   try {
-    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("lastModified", "desc"), orderBy("name"));
+    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("lastModified", "desc"), orderBy("name"), limit(30));
     
     const querySnapshot = await getDocs(q);
     let response:any = [];
@@ -53,7 +55,7 @@ export const createProject = async (uid: string) => {
       status: "Blank",
       progress: 0,
       voxelReqId: "",
-      voxelData: [],
+      voxelDataLink: "", //changed []
       imageLink: "",
       meshReqId: "",
       meshLink: "",
@@ -108,7 +110,15 @@ export const removeProject = async (projectId: string) => {
     return error;
   }
 }
-
+export const SaveVoxelData = async (projectId: string, voxelData: Voxel[]) => {
+  console.log(voxelData);
+  const jsonData = JSON.stringify(voxelData);
+  const storageRef = ref (storage, `voxelData/${projectId}.json`)
+  const blob = new Blob([jsonData], { type: "application/json" });
+  uploadBytes(storageRef, blob).then((snapshot) => {
+    console.log('Uploaded a voxel');
+  });
+}
 export const voxelCreated = async (
   uid: string,
   projectId: string,
@@ -123,11 +133,13 @@ export const voxelCreated = async (
     await updateDoc(userRef, {
       'billing.compute_unit': userData?.billing.compute_unit - usedPrice
     });
+    console.log("voxelCreate");
+    SaveVoxelData(projectId, voxelData);
     const projectRef = doc(db, 'projects', projectId);
     await updateDoc(projectRef, {
       imageLink: file,
       status: "Editing",
-      voxelData: voxelData,
+      voxelDataLink:  `voxelData/${projectId}.json`,
       lastModified: new Date().toISOString(),
       prompt: prompt
     });
@@ -150,9 +162,9 @@ export const updateVoxel = async (
 ) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
+    SaveVoxelData(projectId, voxelData);
     await updateDoc(projectRef, {
       status: status,
-      voxelData: voxelData,
       lastModified: new Date().toISOString(),
       prompt: prompt
     });

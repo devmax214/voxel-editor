@@ -19,8 +19,10 @@ import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
 import { cropToSquare } from "utils/utils";
+import { storage } from "@/Firebase/config";
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
+
 
 type VoxelsProps = {
   voxels: THREE.Vector3[];
@@ -291,9 +293,20 @@ const Views: React.FC = () => {
   const { viewMode, setLoading } = useBasicStore();
   const { voxels, mesh } = useThreeStore();
   const toast = useToast();
+  
+  const current = projects.filter(project => project.id === projectId)[0];
 
+  const storage = getStorage();
+  const storageRef = ref(storage, current.voxelDataLink);
+  if( current.voxelDataLink != ""){
+    getDownloadURL(storageRef)
+      .then(url => fetch(url))
+      .then(response => response.json())
+      .then(data => localStorage.setItem("voxelData", JSON.stringify(data)));
+  }
   const save = useCallback(async (e: KeyboardEvent) => {
-    const current = projects.filter(project => project.id === projectId)[0];
+    
+
     if (current.status === 'Generating') return;
 
     if (e.code === "Backslash" && user) {
@@ -311,12 +324,12 @@ const Views: React.FC = () => {
 
               console.log("saved", current);
               const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
-              if (current.voxelData.length === 0) {
+              if (current.voxelDataLink === "") {
                 const res: any = await voxelCreated(user.uid, projectId, 0, voxelData, iconUrl, current.prompt);
-                updateProject(projectId, { status: res.project.status, voxelData: voxelData, lastModified: new Date().toISOString() });
+                updateProject(projectId, { status: res.project.status, voxelDataLink: `voxelData/${projectId}.json`, lastModified: new Date().toISOString() });
               } else {
                 const res = await updateVoxel(projectId, voxelData, "Editing", current.prompt);
-                updateProject(projectId, { status: "Editing", voxelData: voxelData, lastModified: new Date().toISOString() });
+                updateProject(projectId, { status: "Editing",  voxelDataLink: `voxelData/${projectId}.json`, lastModified: new Date().toISOString() });
               }
               toast({
                 title: 'Success',
@@ -339,15 +352,14 @@ const Views: React.FC = () => {
   );
 
   const autoSave = useCallback(async () => {
-    const current = projects.filter(project => project.id === projectId)[0];
     if (current.status === 'Generating') return;
 
-    if (current?.voxelData.length !== voxels.length) {
+    if (localStorage.getItem("voxelData")?.length !== voxels.length) {
       console.log("autoSaved");
       const voxelData = voxels.map(voxel => ({ x: voxel.x, y: voxel.y, z: voxel.z }));
       try {
         const res = await updateVoxel(projectId, voxelData, "Editing", current.prompt);
-        updateProject(projectId, { voxelData: voxelData, status: "Editing", lastModified: new Date().toISOString() });
+        updateProject(projectId, { status: "Editing", lastModified: new Date().toISOString() });
       } catch (error) {
         console.log(error);
       }

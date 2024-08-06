@@ -105,7 +105,7 @@ exports.createProject = functions.https.onRequest(async (req, res) => {
           uid: uid,
           status: "Blank",
           progress: 0,
-          voxelData: [],
+          voxelDataLink: '',
           meshGenerated: false
         }
         const projectRef = await db.collection('projects').add(project);

@@ -135,6 +135,7 @@ const PromptEditor = () => {
   const handleGenerate = async () => {
     try {
       const res = await requestMesh(propmt);
+      // console.log(res);
       if (res) {
         setReqId(res.id);
         window.localStorage.setItem(projectId, res.id);

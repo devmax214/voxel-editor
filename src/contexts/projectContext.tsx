@@ -39,6 +39,7 @@ export const ProjectContextProvider = (props: React.PropsWithChildren) => {
 
   const updateProject = (projectId: string, projectData: Partial<Project>) => {
     setProjects(projects.map(project => project.id === projectId? { ...project, ...projectData } : project));
+    console.log("updated");
   }
 
   const loadProjects = useCallback(async () => {

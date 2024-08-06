@@ -17,12 +17,8 @@ import { removeProject, duplicateProject } from '@/Firebase/dbactions';
 import { useProjectContext } from '@/contexts/projectContext';
 import { useBasicStore } from '@/store';
 
-const CardView = ({
-  project
-} : {
-  project: Project
-}) => {
-  const { id, progress, status, uid, voxelData, name, lastModified } = project;
+const CardView = ({ project} : {project: Project}) => {
+  const { id, progress, status, uid, voxelDataLink, name, lastModified } = project;
   const { addProject, deleteProject } = useProjectContext();
   const { setLoading } = useBasicStore();
 

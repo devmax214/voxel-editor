@@ -53,7 +53,7 @@ const Home = () => {
           status: 'Blank',
           uid: user.uid,
           voxelReqId: '',
-          voxelData: [],
+          voxelDataLink:'', 
           meshReqId: '',
           meshGenerated: false,
           lastModified: new Date().toISOString(),

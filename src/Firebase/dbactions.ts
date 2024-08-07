@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { app } from "./config";
 import { Voxel } from "utils/types";
-import { ref, getDownloadURL, uploadBytes } from 'firebase/storage';
+import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { storage } from "./config";
 
 const db = getFirestore(app);
@@ -102,6 +102,16 @@ export const duplicateProject = async (projectId: string) => {
 export const removeProject = async (projectId: string) => {
   try {
     const projectRef = doc(db, 'projects', projectId);
+    const projectData = await getDoc(projectRef);
+    // Delete associated voxel data file
+    if (projectData.exists() && projectData.data()?.voxelDataLink) {
+      const storageRef = ref(storage, projectData.data().voxelDataLink);
+      await deleteObject(storageRef).then(() => {
+        console.log("removed storage file for voxel data");
+      }).catch((error) => {
+        // Uh-oh, an error occurred!
+      });
+    }
     await deleteDoc(projectRef);
     
     return { message: 'Project removed successfully' };

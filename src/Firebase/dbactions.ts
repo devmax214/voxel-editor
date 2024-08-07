@@ -10,12 +10,15 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
-  orderBy
+  orderBy, 
+  deleteField
+
 } from "firebase/firestore";
 import { app } from "./config";
 import { Voxel } from "utils/types";
 import { ref, getDownloadURL, uploadBytes, deleteObject } from 'firebase/storage';
 import { storage } from "./config";
+
 
 const db = getFirestore(app);
 
@@ -31,10 +34,11 @@ export const getUserInfo = async (uid: string) => {
   }
 }
 
+
+
 export const getProjectsByUid = async (uid: string) => {
   try {
-    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("lastModified", "desc"), orderBy("name"), limit(30));
-    
+    const q = query(collection(db, "projects"), where("uid", "==", uid), orderBy("lastModified", "desc"), orderBy("name"));
     const querySnapshot = await getDocs(q);
     let response:any = [];
     querySnapshot.forEach((doc) => {

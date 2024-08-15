@@ -32,7 +32,7 @@ export default function Page({ params }: Props) {
           const url = await getDownloadURL(voxelRef);
           const response = await fetch(url);
           const data = await response.json();
-          const voxelData = data.map( pos => new THREE.Vector3(pos.x, pos.y, pos.z));
+          const voxelData = data.map(( pos: Voxel )=> new THREE.Vector3(pos.x, pos.y, pos.z));
           console.log("hererererer");
           console.log(data);
           setVoxels(voxelData);

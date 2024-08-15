@@ -18,6 +18,7 @@ import { useToast } from "@chakra-ui/react";
 import { voxelCreated, updateVoxel } from "@/Firebase/dbactions";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import ModelTip from "./ModelTip";
+// import SelectVoxel from "./SelectVoxel"
 import { cropToSquare } from "utils/utils";
 import { storage } from "@/Firebase/config";
 

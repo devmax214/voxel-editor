@@ -21,6 +21,7 @@ import ModelTip from "./ModelTip";
 // import SelectVoxel from "./SelectVoxel"
 import { cropToSquare } from "utils/utils";
 import { storage } from "@/Firebase/config";
+import { Voxel } from 'utils/types';
 
 const voxelSize = Number(process.env.NEXT_PUBLIC_VOXEL_SIZE);
 
@@ -292,7 +293,7 @@ const Views: React.FC = () => {
   const { projects, updateProject } = useProjectContext();
   const { gl } = useThree();
   const { viewMode, setLoading } = useBasicStore();
-  const { voxels, mesh } = useThreeStore();
+  const { voxels, mesh, setVoxels } = useThreeStore();
   const toast = useToast();
   
   const current = projects.filter(project => project.id === projectId)[0];
@@ -303,11 +304,12 @@ const Views: React.FC = () => {
     getDownloadURL(storageRef)
       .then(url => fetch(url))
       .then(response => response.json())
-      .then(data => localStorage.setItem("voxelData", JSON.stringify(data)));
+      .then(data => 
+        localStorage.setItem("voxelData", JSON.stringify(data))
+    );
   }
   const save = useCallback(async (e: KeyboardEvent) => {
     
-
     if (current.status === 'Generating') return;
 
     if (e.code === "Backslash" && user) {
